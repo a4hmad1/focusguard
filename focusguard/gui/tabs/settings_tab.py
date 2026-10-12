@@ -40,10 +40,9 @@ class SettingsTab(QWidget):
         layout.addWidget(subtitle)
 
         # Section 1: Appearance (White / Black Theme)
-        theme_card = self._create_card("Desktop Appearance & Color Theme")
-        t_layout = QHBoxLayout(theme_card)
-        t_layout.setContentsMargins(14, 12, 14, 12)
-        t_layout.addWidget(QLabel("Interface Theme:"))
+        theme_card, t_layout = self._create_card("Desktop Appearance & Color Theme")
+        t_row = QHBoxLayout()
+        t_row.addWidget(QLabel("Interface Theme:"))
 
         self.theme_combo = QComboBox()
         self.theme_combo.addItems(["Black / Dark Mode", "White / Light Mode"])
@@ -53,14 +52,13 @@ class SettingsTab(QWidget):
         else:
             self.theme_combo.setCurrentIndex(0)
         self.theme_combo.currentIndexChanged.connect(self._on_theme_changed)
-        t_layout.addWidget(self.theme_combo)
-        t_layout.addStretch()
+        t_row.addWidget(self.theme_combo)
+        t_row.addStretch()
+        t_layout.addLayout(t_row)
         layout.addWidget(theme_card)
 
         # Section 2: Browser Filtering & PAC Status
-        pac_card = self._create_card("Browser URL Whitelist & System Proxy")
-        pac_layout = QVBoxLayout(pac_card)
-        pac_layout.setContentsMargins(14, 12, 14, 12)
+        pac_card, pac_layout = self._create_card("Browser URL Whitelist & System Proxy")
         
         pac_status = "Active" if self.blocker.proxy_mgr.is_enabled() else "Inactive (Starts when Focus Shield is turned on)"
         p_lbl = QLabel(f"Browser PAC Policy: <strong>http://127.0.0.1:{DEFAULT_BLOCK_PORT}/proxy.pac</strong> ({pac_status})")
@@ -81,9 +79,7 @@ class SettingsTab(QWidget):
         layout.addWidget(pac_card)
 
         # Section 3: Emergency Recovery
-        rec_card = self._create_card("Emergency Recovery Fail-Safe")
-        rec_layout = QVBoxLayout(rec_card)
-        rec_layout.setContentsMargins(14, 12, 14, 12)
+        rec_card, rec_layout = self._create_card("Emergency Recovery Fail-Safe")
 
         rec_desc = QLabel(
             "Accidentally locked out of a critical academic resource? "
@@ -110,9 +106,7 @@ class SettingsTab(QWidget):
         layout.addWidget(rec_card)
 
         # Section 4: Audit Logs
-        logs_card = self._create_card("Enforcement History & Audit Logs")
-        logs_layout = QVBoxLayout(logs_card)
-        logs_layout.setContentsMargins(14, 12, 14, 12)
+        logs_card, logs_layout = self._create_card("Enforcement History & Audit Logs")
 
         self.logs_table = QTableWidget(0, 4)
         self.logs_table.setHorizontalHeaderLabels(["Timestamp", "Event", "Target", "Details"])
@@ -134,16 +128,17 @@ class SettingsTab(QWidget):
 
         self.load_logs()
 
-    def _create_card(self, title_text: str) -> QFrame:
+    def _create_card(self, title_text: str):
         card = QFrame()
         card.setObjectName("settings_card")
         card.setProperty("class", "card")
-        t = QLabel(title_text)
-        t.setProperty("class", "heading_medium")
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(14, 12, 14, 12)
+        card_layout.setSpacing(10)
+        t = QLabel(title_text)
+        t.setProperty("class", "heading_medium")
         card_layout.addWidget(t)
-        return card
+        return card, card_layout
 
     def _on_theme_changed(self, idx: int):
         theme_name = "white" if idx == 1 else "black"

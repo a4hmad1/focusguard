@@ -256,6 +256,42 @@ def cmd_emergency_unblock(args, db: Database, blocker: WebsiteBlocker, scheduler
     except PermissionError as e:
         print(f"\033[1;31mError:\033[0m {e}")
 
+def cmd_start(args, db: Database, scheduler: Scheduler, blocker: WebsiteBlocker):
+    """Start focus shield with strict URL whitelisting and application restrictions."""
+    dur_str = getattr(args, "duration", "1h") or "1h"
+    td = parse_duration(dur_str)
+    if not td:
+        print(f"\033[1;31mError:\033[0m Invalid duration format '{dur_str}'. Use formats like 25m, 1h, 2h.")
+        sys.exit(1)
+
+    reason = getattr(args, "reason", "Focus session") or "Focus session"
+    session_id = scheduler.start_focus(duration=td, reason=reason)
+    mode = blocker.get_mode().upper()
+
+    print_banner()
+    print(f"\n\033[1;32m=== FOCUS SHIELD ACTIVATED ===\033[0m")
+    print(f"Session ID       : #{session_id}")
+    print(f"Duration         : \033[1;36m{format_duration(td)}\033[0m")
+    if mode == "WHITELIST":
+        print(f"Policy           : \033[1;32mSTRICT WHITELIST\033[0m")
+        print(f"Browser Status   : \033[1;33mALL browser URLs are now BLOCKED except saved whitelist.\033[0m")
+    else:
+        print(f"Policy           : \033[1mBLACKLIST\033[0m (Blocking restricted websites)")
+    print(f"Stop Command     : Run '\033[1mfocusguard stop\033[0m' at any time to deactivate.\n")
+
+def cmd_stop(args, db: Database, scheduler: Scheduler, blocker: WebsiteBlocker):
+    """Stop focus shield and lift all restrictions."""
+    count = scheduler.stop_focus()
+    try:
+        blocker.unblock_all()
+    except Exception:
+        pass
+
+    print_banner()
+    print(f"\n\033[1;32m=== FOCUS SHIELD DEACTIVATED ===\033[0m")
+    print(f"Active Sessions  : {count} session(s) ended.")
+    print(f"Browser Status   : \033[1;32mAll restrictions lifted. Browsers restored to open access.\033[0m\n")
+
 def cmd_mode(args, blocker: WebsiteBlocker):
     """View or switch blocking mode."""
     if args.set_mode:
@@ -278,6 +314,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     # status
     subparsers.add_parser("status", help="Display application and restriction status")
+
+    # start
+    p_start = subparsers.add_parser("start", help="Activate focus shield and start blocking distractions")
+    p_start.add_argument("--duration", "-d", default="1h", help="Duration for focus session (e.g. 25m, 1h, 2h). Default: 1h")
+    p_start.add_argument("--reason", "-r", default="Focus session", help="Reason for session")
+
+    # stop
+    subparsers.add_parser("stop", help="Deactivate focus shield and lift all restrictions")
 
     # allow-site
     p_allow = subparsers.add_parser("allow-site", help="Add an approved website to the whitelist")
@@ -347,6 +391,10 @@ def main(args: Optional[List[str]] = None) -> int:
 
     if parsed_args.command == "status":
         cmd_status(parsed_args, db, scheduler)
+    elif parsed_args.command == "start":
+        cmd_start(parsed_args, db, scheduler, website_blocker)
+    elif parsed_args.command == "stop":
+        cmd_stop(parsed_args, db, scheduler, website_blocker)
     elif parsed_args.command == "allow-site":
         cmd_allow_site(parsed_args, db, website_blocker)
     elif parsed_args.command == "block-site":

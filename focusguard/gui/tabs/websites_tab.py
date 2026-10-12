@@ -7,15 +7,18 @@ from PySide6.QtWidgets import (
     QComboBox, QMessageBox, QFrame
 )
 from PySide6.QtCore import Qt
+from typing import Optional
 from focusguard.core.database import Database
 from focusguard.core.models import WebsiteRule
 from focusguard.engine.website_blocker import WebsiteBlocker
+from focusguard.engine.scheduler import Scheduler
 
 class WebsitesTab(QWidget):
-    def __init__(self, db: Database, website_blocker: WebsiteBlocker):
+    def __init__(self, db: Database, website_blocker: WebsiteBlocker, scheduler: Optional[Scheduler] = None):
         super().__init__()
         self.db = db
         self.blocker = website_blocker
+        self.scheduler = scheduler
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
@@ -39,6 +42,53 @@ class WebsitesTab(QWidget):
         self.mode_badge = QLabel("● STRICT WHITELIST")
         self.mode_badge.setProperty("class", "badge_active")
         header_row.addWidget(self.mode_badge)
+
+        # Dedicated Start & Stop Shield Buttons
+        self.start_shield_btn = QPushButton("▶  Start Focus")
+        self.start_shield_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #238636;
+                color: #ffffff;
+                border: 1px solid #2ea043;
+                border-radius: 6px;
+                padding: 4px 14px;
+                font-weight: 700;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #2ea043;
+            }
+            QPushButton:disabled {
+                background-color: rgba(35, 134, 54, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(46, 160, 67, 0.2);
+            }
+        """)
+        self.start_shield_btn.clicked.connect(self._on_start_focus)
+        header_row.addWidget(self.start_shield_btn)
+
+        self.stop_shield_btn = QPushButton("⏹  Stop Focus")
+        self.stop_shield_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #da3633;
+                color: #ffffff;
+                border: 1px solid #f85149;
+                border-radius: 6px;
+                padding: 4px 14px;
+                font-weight: 700;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #b62324;
+            }
+            QPushButton:disabled {
+                background-color: rgba(218, 54, 51, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(248, 81, 73, 0.2);
+            }
+        """)
+        self.stop_shield_btn.clicked.connect(self._on_stop_focus)
+        header_row.addWidget(self.stop_shield_btn)
 
         self.mode_btn = QPushButton("Switch Mode")
         self.mode_btn.setProperty("class", "secondary")
@@ -167,6 +217,24 @@ class WebsitesTab(QWidget):
             self.load_rules()
         except Exception as e:
             QMessageBox.warning(self, "Notice", str(e))
+
+    def _on_start_focus(self):
+        if self.scheduler:
+            self.scheduler.start_focus()
+            self.update_status(True)
+
+    def _on_stop_focus(self):
+        if self.scheduler:
+            self.scheduler.stop_focus()
+            try:
+                self.blocker.unblock_all()
+            except Exception:
+                pass
+            self.update_status(False)
+
+    def update_status(self, is_active: bool):
+        self.start_shield_btn.setEnabled(not is_active)
+        self.stop_shield_btn.setEnabled(is_active)
 
     def _check_test_url(self):
         raw = self.test_input.text().strip()

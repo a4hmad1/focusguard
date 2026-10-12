@@ -67,6 +67,15 @@ class Scheduler:
         self.enforce_current_state()
         return session_id
 
+    def start_focus(self, duration: Optional[timedelta] = None, reason: str = "Focus session") -> int:
+        """Start focus shield with given or default duration (default 1 hour)."""
+        dur = duration or timedelta(hours=1)
+        return self.start_timed_session(duration=dur, target="all", session_type="focus_mode", reason=reason)
+
+    def stop_focus(self) -> int:
+        """Stop all active focus sessions and restore normal access."""
+        return self.cancel_active_sessions()
+
     def cancel_active_sessions(self) -> int:
         """Cancel all running timed sessions and restore access."""
         count = self.db.end_all_active_sessions()

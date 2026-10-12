@@ -41,8 +41,31 @@ def test_cli_parser_commands():
     assert args.command == "mode"
     assert args.set_mode == "whitelist"
 
+    # start
+    args = parser.parse_args(["start", "--duration", "45m"])
+    assert args.command == "start"
+    assert args.duration == "45m"
+
+    # stop
+    args = parser.parse_args(["stop"])
+    assert args.command == "stop"
+
 def test_cli_execution_status(capsys):
     ret = main(["status"])
     assert ret == 0
     captured = capsys.readouterr()
     assert "Focus Guard State" in captured.out
+
+def test_cli_execution_start_and_stop(capsys):
+    # Test start command
+    ret_start = main(["start", "--duration", "30m", "--reason", "Test Study"])
+    assert ret_start == 0
+    captured_start = capsys.readouterr()
+    assert "FOCUS SHIELD ACTIVATED" in captured_start.out
+    assert "30m" in captured_start.out
+
+    # Test stop command
+    ret_stop = main(["stop"])
+    assert ret_stop == 0
+    captured_stop = capsys.readouterr()
+    assert "FOCUS SHIELD DEACTIVATED" in captured_stop.out

@@ -39,6 +39,53 @@ class AppsTab(QWidget):
         header_row.addLayout(title_box)
         header_row.addStretch()
 
+        # Dedicated Start & Stop Shield Buttons
+        self.start_shield_btn = QPushButton("▶  Start Focus")
+        self.start_shield_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #238636;
+                color: #ffffff;
+                border: 1px solid #2ea043;
+                border-radius: 6px;
+                padding: 4px 14px;
+                font-weight: 700;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #2ea043;
+            }
+            QPushButton:disabled {
+                background-color: rgba(35, 134, 54, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(46, 160, 67, 0.2);
+            }
+        """)
+        self.start_shield_btn.clicked.connect(self._on_start_focus)
+        header_row.addWidget(self.start_shield_btn)
+
+        self.stop_shield_btn = QPushButton("⏹  Stop Focus")
+        self.stop_shield_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #da3633;
+                color: #ffffff;
+                border: 1px solid #f85149;
+                border-radius: 6px;
+                padding: 4px 14px;
+                font-weight: 700;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #b62324;
+            }
+            QPushButton:disabled {
+                background-color: rgba(218, 54, 51, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(248, 81, 73, 0.2);
+            }
+        """)
+        self.stop_shield_btn.clicked.connect(self._on_stop_focus)
+        header_row.addWidget(self.stop_shield_btn)
+
         refresh_btn = QPushButton("Refresh Apps List")
         refresh_btn.setProperty("class", "secondary")
         refresh_btn.clicked.connect(self.load_applications)
@@ -195,3 +242,17 @@ class AppsTab(QWidget):
             self.blocker.check_and_enforce()
             self.load_applications()
             QMessageBox.information(self, "Timed Restriction Active", f"'{app.name}' is now blocked for {duration_str}.")
+
+    def _on_start_focus(self):
+        if self.scheduler:
+            self.scheduler.start_focus()
+            self.update_status(True)
+
+    def _on_stop_focus(self):
+        if self.scheduler:
+            self.scheduler.stop_focus()
+            self.update_status(False)
+
+    def update_status(self, is_active: bool):
+        self.start_shield_btn.setEnabled(not is_active)
+        self.stop_shield_btn.setEnabled(is_active)

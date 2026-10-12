@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
         # Stacked Pages
         self.stacked_pages = QStackedWidget()
         self.dashboard_tab = DashboardTab(self.db, self.scheduler)
-        self.websites_tab = WebsitesTab(self.db, self.website_blocker)
+        self.websites_tab = WebsitesTab(self.db, self.website_blocker, self.scheduler)
         self.apps_tab = AppsTab(self.db, self.scheduler)
         self.schedules_tab = SchedulesTab(self.db)
         self.settings_tab = SettingsTab(self.db, self.website_blocker, self.scheduler)
@@ -141,7 +141,7 @@ class MainWindow(QMainWindow):
     def _create_header_bar(self) -> QFrame:
         header = QFrame()
         header.setObjectName("header_bar")
-        header.setFixedHeight(50)
+        header.setFixedHeight(52)
         layout = QHBoxLayout(header)
         layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(10)
@@ -150,6 +150,55 @@ class MainWindow(QMainWindow):
         self.page_title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #8b949e;")
         layout.addWidget(self.page_title_lbl)
         layout.addStretch()
+
+        # Prominent Global Start and Stop Buttons
+        self.start_shield_btn = QPushButton("▶  Start Focus")
+        self.start_shield_btn.setFixedHeight(30)
+        self.start_shield_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #238636;
+                color: #ffffff;
+                border: 1px solid #2ea043;
+                border-radius: 6px;
+                padding: 4px 14px;
+                font-weight: 700;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #2ea043;
+            }
+            QPushButton:disabled {
+                background-color: rgba(35, 134, 54, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(46, 160, 67, 0.2);
+            }
+        """)
+        self.start_shield_btn.clicked.connect(self._start_global_shield)
+        layout.addWidget(self.start_shield_btn)
+
+        self.stop_shield_btn = QPushButton("⏹  Stop Focus")
+        self.stop_shield_btn.setFixedHeight(30)
+        self.stop_shield_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #da3633;
+                color: #ffffff;
+                border: 1px solid #f85149;
+                border-radius: 6px;
+                padding: 4px 14px;
+                font-weight: 700;
+                font-size: 12px;
+            }
+            QPushButton:hover {
+                background-color: #b62324;
+            }
+            QPushButton:disabled {
+                background-color: rgba(218, 54, 51, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(248, 81, 73, 0.2);
+            }
+        """)
+        self.stop_shield_btn.clicked.connect(self._stop_global_shield)
+        layout.addWidget(self.stop_shield_btn)
 
         # Theme Switcher Button
         self.theme_btn = QPushButton()
@@ -181,6 +230,25 @@ class MainWindow(QMainWindow):
 
         return header
 
+    def _start_global_shield(self):
+        self.scheduler.start_focus()
+        self._on_tick()
+
+    def _stop_global_shield(self):
+        self.scheduler.stop_focus()
+        try:
+            self.website_blocker.unblock_all()
+        except Exception:
+            pass
+        self._on_tick()
+
+    def _toggle_global_shield(self):
+        status = self.scheduler.get_current_status()
+        if status["is_blocking_active"]:
+            self._stop_global_shield()
+        else:
+            self._start_global_shield()
+
     def _update_theme_button_text(self):
         if self.current_theme in ("white", "light"):
             self.theme_btn.setText("🌙 Dark Mode")
@@ -210,7 +278,8 @@ class MainWindow(QMainWindow):
         self.dashboard_tab.refresh_stats()
 
         status = self.scheduler.get_current_status()
-        if status["is_blocking_active"]:
+        is_active = status["is_blocking_active"]
+        if is_active:
             self.status_pill.setText("● SHIELD ACTIVE")
             self.status_pill.setStyleSheet("""
                 background-color: rgba(46, 160, 67, 0.15);
@@ -221,6 +290,8 @@ class MainWindow(QMainWindow):
                 font-size: 11px;
                 font-weight: 600;
             """)
+            self.start_shield_btn.setEnabled(False)
+            self.stop_shield_btn.setEnabled(True)
         else:
             self.status_pill.setText("○ SHIELD IDLE")
             self.status_pill.setStyleSheet("""
@@ -232,6 +303,14 @@ class MainWindow(QMainWindow):
                 font-size: 11px;
                 font-weight: 600;
             """)
+            self.start_shield_btn.setEnabled(True)
+            self.stop_shield_btn.setEnabled(False)
+
+        # Sync tab states
+        if hasattr(self.websites_tab, "update_status"):
+            self.websites_tab.update_status(is_active)
+        if hasattr(self.apps_tab, "update_status"):
+            self.apps_tab.update_status(is_active)
 
     def _quick_emergency_unlock(self):
         confirm = QMessageBox.question(

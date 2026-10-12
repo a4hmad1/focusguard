@@ -154,6 +154,16 @@ QPushButton.danger:hover {
     background-color: #b62324;
 }
 
+QPushButton.success {
+    background-color: #238636;
+    border: 1px solid #2ea043;
+    color: #ffffff;
+}
+
+QPushButton.success:hover {
+    background-color: #2ea043;
+}
+
 /* Inputs and Selects */
 QLineEdit, QComboBox, QSpinBox, QTimeEdit {
     background-color: #0d1117;
@@ -402,6 +412,16 @@ QPushButton.danger {
 
 QPushButton.danger:hover {
     background-color: #a40e26;
+}
+
+QPushButton.success {
+    background-color: #1f883d;
+    border: 1px solid #1a7f37;
+    color: #ffffff;
+}
+
+QPushButton.success:hover {
+    background-color: #1a7f37;
 }
 
 /* Inputs and Selects */

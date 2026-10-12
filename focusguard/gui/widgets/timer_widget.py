@@ -85,9 +85,53 @@ class TimerWidget(QFrame):
         self.custom_input.setFixedWidth(170)
         self.action_row.addWidget(self.custom_input)
 
-        self.start_btn = QPushButton("Start Focus Shield")
-        self.start_btn.clicked.connect(self._on_action_button_clicked)
+        self.start_btn = QPushButton("▶  Start Focus")
+        self.start_btn.setFixedHeight(34)
+        self.start_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #238636;
+                color: #ffffff;
+                border: 1px solid #2ea043;
+                border-radius: 6px;
+                padding: 6px 16px;
+                font-weight: 700;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #2ea043;
+            }
+            QPushButton:disabled {
+                background-color: rgba(35, 134, 54, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(46, 160, 67, 0.2);
+            }
+        """)
+        self.start_btn.clicked.connect(self._on_start_clicked)
         self.action_row.addWidget(self.start_btn)
+
+        self.stop_btn = QPushButton("⏹  Stop Focus")
+        self.stop_btn.setFixedHeight(34)
+        self.stop_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #da3633;
+                color: #ffffff;
+                border: 1px solid #f85149;
+                border-radius: 6px;
+                padding: 6px 16px;
+                font-weight: 700;
+                font-size: 13px;
+            }
+            QPushButton:hover {
+                background-color: #b62324;
+            }
+            QPushButton:disabled {
+                background-color: rgba(218, 54, 51, 0.25);
+                color: rgba(255, 255, 255, 0.35);
+                border: 1px solid rgba(248, 81, 73, 0.2);
+            }
+        """)
+        self.stop_btn.clicked.connect(self._on_stop_clicked)
+        self.action_row.addWidget(self.stop_btn)
 
         layout.addLayout(self.action_row)
 
@@ -101,16 +145,22 @@ class TimerWidget(QFrame):
             self.digits_label.setText(format_time_remaining(self._total_duration_secs))
             self.custom_input.setText(val_str)
 
+    def _on_start_clicked(self):
+        val = self.custom_input.text().strip() or "25m"
+        td = parse_duration(val)
+        if not td:
+            td = timedelta(minutes=25)
+        self._total_duration_secs = int(td.total_seconds())
+        self.session_start_requested.emit(td, f"Focus Shield ({val})")
+
+    def _on_stop_clicked(self):
+        self.session_stop_requested.emit()
+
     def _on_action_button_clicked(self):
         if not self._is_active:
-            val = self.custom_input.text().strip() or "25m"
-            td = parse_duration(val)
-            if not td:
-                td = timedelta(minutes=25)
-            self._total_duration_secs = int(td.total_seconds())
-            self.session_start_requested.emit(td, f"Focus Shield ({val})")
+            self._on_start_clicked()
         else:
-            self.session_stop_requested.emit()
+            self._on_stop_clicked()
 
     def update_countdown(self, remaining_seconds: float, is_active: bool):
         self._is_active = is_active
@@ -126,9 +176,8 @@ class TimerWidget(QFrame):
                 font-size: 11px;
                 font-weight: 700;
             """)
-            self.start_btn.setText("Stop Focus Shield")
-            self.start_btn.setProperty("class", "danger")
-            self.start_btn.setStyleSheet("background-color: #dc2626; border-color: #b91c1c; color: white;")
+            self.start_btn.setEnabled(False)
+            self.stop_btn.setEnabled(True)
             self.subtitle_label.setText("Browsers are locked to approved URLs only. All other sites are blocked.")
             pct = int((remaining_seconds / max(1, self._total_duration_secs)) * 100)
             self.progress_bar.setValue(min(100, max(0, pct)))
@@ -143,9 +192,8 @@ class TimerWidget(QFrame):
                 font-size: 11px;
                 font-weight: 700;
             """)
-            self.start_btn.setText("Start Focus Shield")
-            self.start_btn.setProperty("class", "")
-            self.start_btn.setStyleSheet("")
+            self.start_btn.setEnabled(True)
+            self.stop_btn.setEnabled(False)
             self.subtitle_label.setText("All browser URLs will be blocked except saved URLs in your whitelist.")
             self.progress_bar.setValue(100)
             if not is_active:
