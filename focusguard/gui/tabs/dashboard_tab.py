@@ -1,18 +1,17 @@
-"""Formal Dashboard Overview Tab for FocusGuard GUI."""
-
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QFrame, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
+    QFrame, QPushButton
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from datetime import timedelta
 from focusguard.core.database import Database
 from focusguard.engine.scheduler import Scheduler
 from focusguard.engine.app_detector import AppDetector
-from focusguard.gui.widgets.stat_card import StatCard
 from focusguard.gui.widgets.timer_widget import TimerWidget
 
 class DashboardTab(QWidget):
+    navigate_to_tab = Signal(int)  # 1 for Websites, 2 for Apps
+
     def __init__(self, db: Database, scheduler: Scheduler):
         super().__init__()
         self.db = db
@@ -20,40 +19,21 @@ class DashboardTab(QWidget):
         self.detector = AppDetector()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(18)
 
         # Header Title
-        header_layout = QHBoxLayout()
         title_box = QVBoxLayout()
-        title_box.setSpacing(2)
+        title_box.setSpacing(4)
         
-        self.title_label = QLabel("Focus Dashboard")
+        self.title_label = QLabel("Study & Homework Focus Shield")
         self.title_label.setProperty("class", "heading_large")
-        self.subtitle_label = QLabel("Enforcing strict URL whitelisting and application restrictions.")
+        self.subtitle_label = QLabel("Lock your browsers to approved websites only and block distracting applications.")
         self.subtitle_label.setProperty("class", "subtext")
         
         title_box.addWidget(self.title_label)
         title_box.addWidget(self.subtitle_label)
-        header_layout.addLayout(title_box)
-        header_layout.addStretch()
-
-        layout.addLayout(header_layout)
-
-        # Stat Cards Row
-        self.stats_row = QHBoxLayout()
-        self.stats_row.setSpacing(12)
-
-        self.card_sites = StatCard("Approved Whitelist", "0", "Only these URLs open", "#16a34a")
-        self.card_apps = StatCard("Blocked Apps", "0", "Restricted applications", "#dc2626")
-        self.card_running = StatCard("Active Processes", "0", "Monitored on system", "#2563eb")
-        self.card_mode = StatCard("Enforcement Mode", "WHITELIST", "Default-deny policy", "#0891b2")
-
-        self.stats_row.addWidget(self.card_sites)
-        self.stats_row.addWidget(self.card_apps)
-        self.stats_row.addWidget(self.card_running)
-        self.stats_row.addWidget(self.card_mode)
-        layout.addLayout(self.stats_row)
+        layout.addLayout(title_box)
 
         # Center Hero Timer Widget
         self.timer_widget = TimerWidget()
@@ -61,30 +41,87 @@ class DashboardTab(QWidget):
         self.timer_widget.session_stop_requested.connect(self._on_stop_session)
         layout.addWidget(self.timer_widget)
 
-        # Active Sessions Summary Table
-        sessions_frame = QFrame()
-        sessions_frame.setObjectName("sessions_frame")
-        sessions_frame.setProperty("class", "card")
-        sessions_layout = QVBoxLayout(sessions_frame)
-        sessions_layout.setContentsMargins(12, 10, 12, 10)
+        # Quick Control & Status Cards Row
+        cards_row = QHBoxLayout()
+        cards_row.setSpacing(14)
 
-        sec_title = QLabel("Active Focus Restrictions & Timers")
-        sec_title.setProperty("class", "heading_medium")
-        sessions_layout.addWidget(sec_title)
+        # Card 1: Allowed Websites Summary
+        self.sites_card = QFrame()
+        self.sites_card.setProperty("class", "card")
+        sc_layout = QVBoxLayout(self.sites_card)
+        sc_layout.setContentsMargins(16, 14, 16, 14)
+        sc_layout.setSpacing(8)
 
-        self.sessions_table = QTableWidget(0, 4)
-        self.sessions_table.setHorizontalHeaderLabels(["Target", "Type", "Expires At", "Reason"])
-        self.sessions_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.sessions_table.verticalHeader().setVisible(False)
-        self.sessions_table.verticalHeader().setDefaultSectionSize(36)
-        self.sessions_table.setShowGrid(False)
-        self.sessions_table.setFixedHeight(120)
-        self.sessions_table.setEditTriggers(QTableWidget.NoEditTriggers)
-        sessions_layout.addWidget(self.sessions_table)
+        sc_title = QLabel("🌐   Allowed Websites")
+        sc_title.setStyleSheet("font-size: 14px; font-weight: 700;")
+        self.sc_count_lbl = QLabel("0 Approved Sites")
+        self.sc_count_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #16a34a;")
+        sc_desc = QLabel("Only websites in your Allowed list can be opened in any web browser during focus.")
+        sc_desc.setStyleSheet("font-size: 12px; color: #64748b;")
+        sc_desc.setWordWrap(True)
 
-        layout.addWidget(sessions_frame)
+        sc_btn = QPushButton("Manage Allowed Websites →")
+        sc_btn.setProperty("class", "secondary")
+        sc_btn.clicked.connect(lambda: self.navigate_to_tab.emit(1))
+
+        sc_layout.addWidget(sc_title)
+        sc_layout.addWidget(self.sc_count_lbl)
+        sc_layout.addWidget(sc_desc)
+        sc_layout.addStretch()
+        sc_layout.addWidget(sc_btn)
+        cards_row.addWidget(self.sites_card)
+
+        # Card 2: Blocked Applications Summary
+        self.apps_card = QFrame()
+        self.apps_card.setProperty("class", "card")
+        ac_layout = QVBoxLayout(self.apps_card)
+        ac_layout.setContentsMargins(16, 14, 16, 14)
+        ac_layout.setSpacing(8)
+
+        ac_title = QLabel("💻   Distracting Apps")
+        ac_title.setStyleSheet("font-size: 14px; font-weight: 700;")
+        self.ac_count_lbl = QLabel("0 Blocked Apps")
+        self.ac_count_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #dc2626;")
+        ac_desc = QLabel("Selected apps (games, Discord, etc.) will be automatically closed if opened while studying.")
+        ac_desc.setStyleSheet("font-size: 12px; color: #64748b;")
+        ac_desc.setWordWrap(True)
+
+        ac_btn = QPushButton("Manage Blocked Apps →")
+        ac_btn.setProperty("class", "secondary")
+        ac_btn.clicked.connect(lambda: self.navigate_to_tab.emit(2))
+
+        ac_layout.addWidget(ac_title)
+        ac_layout.addWidget(self.ac_count_lbl)
+        ac_layout.addWidget(ac_desc)
+        ac_layout.addStretch()
+        ac_layout.addWidget(ac_btn)
+        cards_row.addWidget(self.apps_card)
+
+        layout.addLayout(cards_row)
+
+        # Friendly 3-Step Guide Card
+        guide_card = QFrame()
+        guide_card.setProperty("class", "card")
+        g_layout = QVBoxLayout(guide_card)
+        g_layout.setContentsMargins(16, 12, 16, 12)
+        g_layout.setSpacing(6)
+
+        g_title = QLabel("💡   How FocusGuard Works")
+        g_title.setStyleSheet("font-size: 13px; font-weight: 700;")
+        
+        g_text = QLabel(
+            "1. <strong>Add your websites:</strong> Go to 'Allowed Websites' and add sites you need for school or research.<br>"
+            "2. <strong>Start your session:</strong> Choose a time duration above and click <strong>Start Focus Session</strong>.<br>"
+            "3. <strong>Study without distractions:</strong> All browsers (Chrome, Firefox, Brave, Edge) will strictly block all other websites until your timer ends!"
+        )
+        g_text.setStyleSheet("font-size: 12px; color: #64748b; line-height: 1.4;")
+        g_text.setWordWrap(True)
+
+        g_layout.addWidget(g_title)
+        g_layout.addWidget(g_text)
+        layout.addWidget(guide_card)
+
         layout.addStretch()
-
         self.refresh_stats()
 
     def _on_start_session(self, duration: timedelta, reason: str):
@@ -96,7 +133,7 @@ class DashboardTab(QWidget):
         self.refresh_stats()
 
     def refresh_stats(self):
-        """Update counts, active session rows, and timer status."""
+        """Update counts and timer status."""
         status = self.scheduler.get_current_status()
 
         # Update Timer widget
@@ -105,22 +142,9 @@ class DashboardTab(QWidget):
             is_active=status["is_blocking_active"]
         )
 
-        # Update Stat Cards
+        # Update Counts
         whitelisted_count = len(self.db.get_website_rules(rule_type="whitelist", only_active=True))
         apps_count = len(self.db.get_app_rules(only_blocked=True))
-        running_count = len(self.detector.get_running_processes())
-        mode_str = status["mode"].upper()
 
-        self.card_sites.set_value(str(whitelisted_count))
-        self.card_apps.set_value(str(apps_count))
-        self.card_running.set_value(str(running_count))
-        self.card_mode.set_value(mode_str)
-
-        # Populate Active Sessions
-        active_sessions = status["active_sessions"]
-        self.sessions_table.setRowCount(len(active_sessions))
-        for row, s in enumerate(active_sessions):
-            self.sessions_table.setItem(row, 0, QTableWidgetItem(str(s.get("target", "All"))))
-            self.sessions_table.setItem(row, 1, QTableWidgetItem(str(s.get("session_type", "Focus Shield"))))
-            self.sessions_table.setItem(row, 2, QTableWidgetItem(str(s.get("end_time", ""))[:19]))
-            self.sessions_table.setItem(row, 3, QTableWidgetItem(str(s.get("reason", ""))))
+        self.sc_count_lbl.setText(f"{whitelisted_count} Approved Study Websites")
+        self.ac_count_lbl.setText(f"{apps_count} Restricted Applications")

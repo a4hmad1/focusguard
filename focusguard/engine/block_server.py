@@ -116,7 +116,7 @@ class BlockHTTPHandler(http.server.BaseHTTPRequestHandler):
     }}
 
     // ALL OTHER URLS ARE BLOCKED - Route to FocusGuard block server
-    return "PROXY {DEFAULT_BLOCK_HOST}:{DEFAULT_BLOCK_PORT}; DIRECT";
+    return "PROXY {DEFAULT_BLOCK_HOST}:{DEFAULT_BLOCK_PORT}";
 }}
 """
         else:
@@ -136,7 +136,7 @@ class BlockHTTPHandler(http.server.BaseHTTPRequestHandler):
     for (var i = 0; i < blockedDomains.length; i++) {{
         var d = blockedDomains[i];
         if (lHost === d || dnsDomainIs(lHost, "." + d) || shExpMatch(lHost, "*." + d)) {{
-            return "PROXY {DEFAULT_BLOCK_HOST}:{DEFAULT_BLOCK_PORT}; DIRECT";
+            return "PROXY {DEFAULT_BLOCK_HOST}:{DEFAULT_BLOCK_PORT}";
         }}
     }}
 

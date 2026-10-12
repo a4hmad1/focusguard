@@ -30,9 +30,9 @@ class AppsTab(QWidget):
         header_row = QHBoxLayout()
         title_box = QVBoxLayout()
         title_box.setSpacing(4)
-        title = QLabel("Application & Process Management")
+        title = QLabel("Applications Blocked While Studying")
         title.setProperty("class", "heading_large")
-        subtitle = QLabel("Detect running programs and control application execution.")
+        subtitle = QLabel("Choose desktop programs to block during focus sessions (e.g. Discord, Steam, games). Essential system apps are protected.")
         subtitle.setProperty("class", "subtext")
         title_box.addWidget(title)
         title_box.addWidget(subtitle)
@@ -43,21 +43,21 @@ class AppsTab(QWidget):
         self.start_shield_btn = QPushButton("▶  Start Focus")
         self.start_shield_btn.setStyleSheet("""
             QPushButton {
-                background-color: #238636;
+                background-color: #16a34a;
                 color: #ffffff;
-                border: 1px solid #2ea043;
+                border: 1px solid #15803d;
                 border-radius: 6px;
-                padding: 4px 14px;
+                padding: 5px 16px;
                 font-weight: 700;
                 font-size: 12px;
             }
             QPushButton:hover {
-                background-color: #2ea043;
+                background-color: #22c55e;
             }
             QPushButton:disabled {
-                background-color: rgba(35, 134, 54, 0.25);
+                background-color: rgba(22, 163, 74, 0.25);
                 color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(46, 160, 67, 0.2);
+                border-color: transparent;
             }
         """)
         self.start_shield_btn.clicked.connect(self._on_start_focus)
@@ -66,27 +66,27 @@ class AppsTab(QWidget):
         self.stop_shield_btn = QPushButton("⏹  Stop Focus")
         self.stop_shield_btn.setStyleSheet("""
             QPushButton {
-                background-color: #da3633;
+                background-color: #dc2626;
                 color: #ffffff;
-                border: 1px solid #f85149;
+                border: 1px solid #b91c1c;
                 border-radius: 6px;
-                padding: 4px 14px;
+                padding: 5px 16px;
                 font-weight: 700;
                 font-size: 12px;
             }
             QPushButton:hover {
-                background-color: #b62324;
+                background-color: #ef4444;
             }
             QPushButton:disabled {
-                background-color: rgba(218, 54, 51, 0.25);
+                background-color: rgba(220, 38, 38, 0.2);
                 color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(248, 81, 73, 0.2);
+                border-color: transparent;
             }
         """)
         self.stop_shield_btn.clicked.connect(self._on_stop_focus)
         header_row.addWidget(self.stop_shield_btn)
 
-        refresh_btn = QPushButton("Refresh Apps List")
+        refresh_btn = QPushButton("Refresh List")
         refresh_btn.setProperty("class", "secondary")
         refresh_btn.clicked.connect(self.load_applications)
         header_row.addWidget(refresh_btn)
@@ -95,7 +95,7 @@ class AppsTab(QWidget):
         # Search and Filters
         filter_row = QHBoxLayout()
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search application by name or executable...")
+        self.search_input.setPlaceholderText("Search application by name...")
         self.search_input.textChanged.connect(self.load_applications)
         filter_row.addWidget(self.search_input, stretch=2)
 
@@ -106,11 +106,11 @@ class AppsTab(QWidget):
 
         layout.addLayout(filter_row)
 
-        # Apps Table
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Application Name", "Executable / Process", "Process State", "Restriction Status", "Actions"])
+        # Apps Table (4 Clean Columns)
+        self.table = QTableWidget(0, 4)
+        self.table.setHorizontalHeaderLabels(["Application Name", "Status", "Study Restriction", "Action"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self.table.verticalHeader().setVisible(False)
@@ -161,52 +161,55 @@ class AppsTab(QWidget):
             is_blk = item["is_blocked"]
             is_crit = item["is_critical"]
 
-            # Name
-            self.table.setItem(i, 0, QTableWidgetItem(app.name))
-            # Executable
-            self.table.setItem(i, 1, QTableWidgetItem(app.exec_name))
+            # Application Name & Executable
+            app_label = f"💻   {app.name}"
+            if app.exec_name.lower() != app.name.lower():
+                app_label += f" ({app.exec_name})"
+            name_item = QTableWidgetItem(app_label)
+            name_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            self.table.setItem(i, 0, name_item)
 
             # Running state badge
-            run_item = QTableWidgetItem("Running" if is_run else "Stopped")
+            run_str = "●  Running" if is_run else "○  Closed"
+            run_item = QTableWidgetItem(run_str)
             run_item.setTextAlignment(Qt.AlignCenter)
-            run_item.setForeground(Qt.green if is_run else Qt.gray)
-            self.table.setItem(i, 2, run_item)
+            if is_run:
+                run_item.setForeground(Qt.GlobalColor.green)
+            else:
+                run_item.setForeground(Qt.GlobalColor.gray)
+            self.table.setItem(i, 1, run_item)
 
             # Restriction badge
             if is_crit:
-                restr_item = QTableWidgetItem("System Protected")
-                restr_item.setForeground(Qt.cyan)
+                restr_item = QTableWidgetItem("🛡️  Protected OS")
+                restr_item.setForeground(Qt.GlobalColor.cyan)
             elif is_blk:
-                restr_item = QTableWidgetItem("Blocked")
-                restr_item.setForeground(Qt.red)
+                restr_item = QTableWidgetItem("⛔  Blocked")
+                restr_item.setForeground(Qt.GlobalColor.red)
             else:
-                restr_item = QTableWidgetItem("Allowed")
-                restr_item.setForeground(Qt.blue)
+                restr_item = QTableWidgetItem("🟢  Allowed")
+                restr_item.setForeground(Qt.GlobalColor.green)
             restr_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(i, 3, restr_item)
+            self.table.setItem(i, 2, restr_item)
 
-            # Actions cell
+            # Action button
             actions_widget = QWidget()
             act_layout = QHBoxLayout(actions_widget)
             act_layout.setContentsMargins(4, 2, 4, 2)
             act_layout.setSpacing(6)
 
             if is_crit:
-                lbl = QLabel("Protected OS")
-                lbl.setStyleSheet("color: #38bdf8; font-weight: 600;")
+                lbl = QLabel("System Safe")
+                lbl.setStyleSheet("color: #38bdf8; font-size: 11px; font-weight: 600;")
                 act_layout.addWidget(lbl)
             else:
-                toggle_btn = QPushButton("Unblock" if is_blk else "Block")
+                toggle_btn = QPushButton("Allow App" if is_blk else "Block App")
                 toggle_btn.setProperty("class", "secondary" if is_blk else "danger")
+                toggle_btn.setFixedHeight(28)
                 toggle_btn.clicked.connect(lambda _, a=app, b=is_blk: self._toggle_app_block(a, not b))
                 act_layout.addWidget(toggle_btn)
 
-                timed_btn = QPushButton("Timed...")
-                timed_btn.setProperty("class", "secondary")
-                timed_btn.clicked.connect(lambda _, a=app: self._timed_block_app(a))
-                act_layout.addWidget(timed_btn)
-
-            self.table.setCellWidget(i, 4, actions_widget)
+            self.table.setCellWidget(i, 3, actions_widget)
 
     def _toggle_app_block(self, app, should_block: bool):
         clean = app.exec_name.lower()

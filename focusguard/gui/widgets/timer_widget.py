@@ -22,18 +22,18 @@ class TimerWidget(QFrame):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(14)
 
-        # Header Badge
-        self.status_badge = QLabel("STRICT WHITELIST READY • ALL OTHER WEBSITES BLOCKED")
+        # Header Status Badge
+        self.status_badge = QLabel("○  Focus Shield is OFF")
         self.status_badge.setAlignment(Qt.AlignCenter)
         self.status_badge.setStyleSheet("""
-            background-color: rgba(37, 99, 235, 0.12);
-            color: #2563eb;
-            border: 1px solid rgba(37, 99, 235, 0.3);
-            border-radius: 4px;
-            padding: 4px 12px;
-            font-size: 11px;
+            background-color: rgba(100, 116, 139, 0.12);
+            color: #64748b;
+            border: 1px solid rgba(100, 116, 139, 0.25);
+            border-radius: 20px;
+            padding: 5px 16px;
+            font-size: 12px;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         """)
         layout.addWidget(self.status_badge, alignment=Qt.AlignCenter)
 
@@ -41,20 +41,22 @@ class TimerWidget(QFrame):
         self.digits_label = QLabel("25:00")
         self.digits_label.setAlignment(Qt.AlignCenter)
         self.digits_label.setStyleSheet("""
-            font-size: 54px;
+            font-size: 56px;
             font-weight: 800;
-            letter-spacing: -1.5px;
+            letter-spacing: -2px;
             font-family: monospace, monospace;
+            margin: 4px 0;
         """)
         layout.addWidget(self.digits_label, alignment=Qt.AlignCenter)
 
-        # Subtitle
-        self.subtitle_label = QLabel("All browser URLs will be blocked except saved URLs in your whitelist.")
+        # Plain-English Subtitle
+        self.subtitle_label = QLabel("All web browsers are currently unrestricted. Click Start to begin focusing.")
         self.subtitle_label.setAlignment(Qt.AlignCenter)
         self.subtitle_label.setProperty("class", "subtext")
+        self.subtitle_label.setStyleSheet("font-size: 13px; font-weight: 500;")
         layout.addWidget(self.subtitle_label, alignment=Qt.AlignCenter)
 
-        # Progress Bar
+        # Subtle Progress Bar
         self.progress_bar = QProgressBar()
         self.progress_bar.setFixedHeight(6)
         self.progress_bar.setTextVisible(False)
@@ -62,72 +64,82 @@ class TimerWidget(QFrame):
         self.progress_bar.setValue(100)
         layout.addWidget(self.progress_bar)
 
-        # Presets Row
+        # Friendly Duration Presets
         self.presets_row = QHBoxLayout()
         self.presets_row.setSpacing(8)
+        self.presets_row.setAlignment(Qt.AlignCenter)
 
-        presets = [("25m Study", "25m"), ("45m Lecture", "45m"), ("60m Deep Work", "1h"), ("90m Session", "90m"), ("2h Exam", "2h")]
+        presets = [("25 min", "25m"), ("45 min", "45m"), ("1 hour", "1h"), ("2 hours", "2h")]
         self.preset_buttons = []
         for label, val in presets:
             btn = QPushButton(label)
             btn.setProperty("class", "secondary")
+            btn.setFixedHeight(30)
+            btn.setStyleSheet("padding: 4px 14px; font-size: 12px; font-weight: 600; border-radius: 6px;")
             btn.clicked.connect(lambda _, v=val: self._on_preset_clicked(v))
             self.presets_row.addWidget(btn)
             self.preset_buttons.append(btn)
+        
+        self.custom_input = QLineEdit()
+        self.custom_input.setPlaceholderText("Custom: e.g. 30m")
+        self.custom_input.setFixedWidth(120)
+        self.custom_input.setFixedHeight(30)
+        self.presets_row.addWidget(self.custom_input)
+
         layout.addLayout(self.presets_row)
 
-        # Custom Duration and Action Row
+        # Prominent Big Action Buttons Row
         self.action_row = QHBoxLayout()
-        self.action_row.setSpacing(10)
+        self.action_row.setSpacing(12)
+        self.action_row.setAlignment(Qt.AlignCenter)
 
-        self.custom_input = QLineEdit()
-        self.custom_input.setPlaceholderText("Custom time (e.g. 1h 30m)")
-        self.custom_input.setFixedWidth(170)
-        self.action_row.addWidget(self.custom_input)
-
-        self.start_btn = QPushButton("▶  Start Focus")
-        self.start_btn.setFixedHeight(34)
+        self.start_btn = QPushButton("▶   START FOCUS SESSION")
+        self.start_btn.setFixedHeight(44)
+        self.start_btn.setMinimumWidth(220)
         self.start_btn.setStyleSheet("""
             QPushButton {
-                background-color: #238636;
+                background-color: #16a34a;
                 color: #ffffff;
-                border: 1px solid #2ea043;
-                border-radius: 6px;
-                padding: 6px 16px;
-                font-weight: 700;
-                font-size: 13px;
+                border: 1px solid #15803d;
+                border-radius: 8px;
+                padding: 8px 24px;
+                font-weight: 800;
+                font-size: 14px;
+                letter-spacing: 0.3px;
             }
             QPushButton:hover {
-                background-color: #2ea043;
+                background-color: #22c55e;
             }
             QPushButton:disabled {
-                background-color: rgba(35, 134, 54, 0.25);
-                color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(46, 160, 67, 0.2);
+                background-color: rgba(22, 163, 74, 0.25);
+                color: rgba(255, 255, 255, 0.4);
+                border-color: transparent;
             }
         """)
         self.start_btn.clicked.connect(self._on_start_clicked)
         self.action_row.addWidget(self.start_btn)
 
-        self.stop_btn = QPushButton("⏹  Stop Focus")
-        self.stop_btn.setFixedHeight(34)
+        self.stop_btn = QPushButton("⏹   STOP FOCUS")
+        self.stop_btn.setFixedHeight(44)
+        self.stop_btn.setMinimumWidth(160)
         self.stop_btn.setStyleSheet("""
             QPushButton {
-                background-color: #da3633;
+                background-color: #dc2626;
                 color: #ffffff;
-                border: 1px solid #f85149;
-                border-radius: 6px;
-                padding: 6px 16px;
-                font-weight: 700;
-                font-size: 13px;
+                border: 1px solid #b91c1c;
+                border-radius: 8px;
+                padding: 8px 20px;
+                font-weight: 800;
+                font-size: 14px;
+                letter-spacing: 0.3px;
             }
             QPushButton:hover {
-                background-color: #b62324;
+                background-color: #ef4444;
             }
             QPushButton:disabled {
-                background-color: rgba(218, 54, 51, 0.25);
+                background-color: rgba(220, 38, 38, 0.2);
                 color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(248, 81, 73, 0.2);
+                border-color: transparent;
             }
         """)
         self.stop_btn.clicked.connect(self._on_stop_clicked)
@@ -151,7 +163,7 @@ class TimerWidget(QFrame):
         if not td:
             td = timedelta(minutes=25)
         self._total_duration_secs = int(td.total_seconds())
-        self.session_start_requested.emit(td, f"Focus Shield ({val})")
+        self.session_start_requested.emit(td, f"Focus Session ({val})")
 
     def _on_stop_clicked(self):
         self.session_stop_requested.emit()
@@ -166,35 +178,39 @@ class TimerWidget(QFrame):
         self._is_active = is_active
         if is_active and remaining_seconds > 0:
             self.digits_label.setText(format_time_remaining(remaining_seconds))
-            self.status_badge.setText("● FOCUS SHIELD ACTIVE • ONLY APPROVED SITES OPEN")
+            self.status_badge.setText("●  Focus Shield is ACTIVE")
             self.status_badge.setStyleSheet("""
-                background-color: rgba(34, 197, 94, 0.15);
+                background-color: rgba(22, 163, 74, 0.15);
                 color: #16a34a;
-                border: 1px solid rgba(34, 197, 94, 0.4);
-                border-radius: 4px;
-                padding: 4px 12px;
-                font-size: 11px;
+                border: 1px solid rgba(22, 163, 74, 0.4);
+                border-radius: 20px;
+                padding: 5px 16px;
+                font-size: 12px;
                 font-weight: 700;
+                letter-spacing: 0.3px;
             """)
             self.start_btn.setEnabled(False)
             self.stop_btn.setEnabled(True)
-            self.subtitle_label.setText("Browsers are locked to approved URLs only. All other sites are blocked.")
+            self.subtitle_label.setText("Browsers are locked! Only your Allowed Websites can open. All other sites are blocked.")
+            self.subtitle_label.setStyleSheet("font-size: 13px; font-weight: 600; color: #16a34a;")
             pct = int((remaining_seconds / max(1, self._total_duration_secs)) * 100)
             self.progress_bar.setValue(min(100, max(0, pct)))
         else:
-            self.status_badge.setText("STRICT WHITELIST READY • ALL OTHER WEBSITES BLOCKED")
+            self.status_badge.setText("○  Focus Shield is OFF")
             self.status_badge.setStyleSheet("""
-                background-color: rgba(37, 99, 235, 0.12);
-                color: #2563eb;
-                border: 1px solid rgba(37, 99, 235, 0.3);
-                border-radius: 4px;
-                padding: 4px 12px;
-                font-size: 11px;
+                background-color: rgba(100, 116, 139, 0.12);
+                color: #64748b;
+                border: 1px solid rgba(100, 116, 139, 0.25);
+                border-radius: 20px;
+                padding: 5px 16px;
+                font-size: 12px;
                 font-weight: 700;
+                letter-spacing: 0.3px;
             """)
             self.start_btn.setEnabled(True)
             self.stop_btn.setEnabled(False)
-            self.subtitle_label.setText("All browser URLs will be blocked except saved URLs in your whitelist.")
+            self.subtitle_label.setText("All web browsers are currently unrestricted. Click Start to begin focusing.")
+            self.subtitle_label.setStyleSheet("font-size: 13px; font-weight: 500;")
             self.progress_bar.setValue(100)
             if not is_active:
                 self.digits_label.setText("25:00")

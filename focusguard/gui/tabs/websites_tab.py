@@ -24,14 +24,14 @@ class WebsitesTab(QWidget):
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(16)
 
-        # Header with Title and Mode Toggle
+        # Header with Title and Start/Stop Controls
         header_row = QHBoxLayout()
         title_box = QVBoxLayout()
         title_box.setSpacing(3)
         
-        title = QLabel("Website Whitelist & Browser Shield")
+        title = QLabel("Websites I Can Open While Studying")
         title.setProperty("class", "heading_large")
-        subtitle = QLabel("All websites in all browsers are blocked except your approved URLs below.")
+        subtitle = QLabel("During Focus Mode, web browsers will ONLY open these approved websites. All other websites are blocked.")
         subtitle.setProperty("class", "subtext")
         
         title_box.addWidget(title)
@@ -39,29 +39,37 @@ class WebsitesTab(QWidget):
         header_row.addLayout(title_box)
         header_row.addStretch()
 
-        self.mode_badge = QLabel("● STRICT WHITELIST")
-        self.mode_badge.setProperty("class", "badge_active")
+        self.mode_badge = QLabel("●  STRICT WHITELIST")
+        self.mode_badge.setStyleSheet("""
+            background-color: rgba(22, 163, 74, 0.15);
+            color: #16a34a;
+            border: 1px solid rgba(22, 163, 74, 0.35);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 700;
+        """)
         header_row.addWidget(self.mode_badge)
 
         # Dedicated Start & Stop Shield Buttons
         self.start_shield_btn = QPushButton("▶  Start Focus")
         self.start_shield_btn.setStyleSheet("""
             QPushButton {
-                background-color: #238636;
+                background-color: #16a34a;
                 color: #ffffff;
-                border: 1px solid #2ea043;
+                border: 1px solid #15803d;
                 border-radius: 6px;
-                padding: 4px 14px;
+                padding: 5px 16px;
                 font-weight: 700;
                 font-size: 12px;
             }
             QPushButton:hover {
-                background-color: #2ea043;
+                background-color: #22c55e;
             }
             QPushButton:disabled {
-                background-color: rgba(35, 134, 54, 0.25);
+                background-color: rgba(22, 163, 74, 0.25);
                 color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(46, 160, 67, 0.2);
+                border-color: transparent;
             }
         """)
         self.start_shield_btn.clicked.connect(self._on_start_focus)
@@ -70,30 +78,25 @@ class WebsitesTab(QWidget):
         self.stop_shield_btn = QPushButton("⏹  Stop Focus")
         self.stop_shield_btn.setStyleSheet("""
             QPushButton {
-                background-color: #da3633;
+                background-color: #dc2626;
                 color: #ffffff;
-                border: 1px solid #f85149;
+                border: 1px solid #b91c1c;
                 border-radius: 6px;
-                padding: 4px 14px;
+                padding: 5px 16px;
                 font-weight: 700;
                 font-size: 12px;
             }
             QPushButton:hover {
-                background-color: #b62324;
+                background-color: #ef4444;
             }
             QPushButton:disabled {
-                background-color: rgba(218, 54, 51, 0.25);
+                background-color: rgba(220, 38, 38, 0.2);
                 color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(248, 81, 73, 0.2);
+                border-color: transparent;
             }
         """)
         self.stop_shield_btn.clicked.connect(self._on_stop_focus)
         header_row.addWidget(self.stop_shield_btn)
-
-        self.mode_btn = QPushButton("Switch Mode")
-        self.mode_btn.setProperty("class", "secondary")
-        self.mode_btn.clicked.connect(self._toggle_mode)
-        header_row.addWidget(self.mode_btn)
 
         layout.addLayout(header_row)
 
@@ -109,19 +112,19 @@ class WebsitesTab(QWidget):
         add_row.setSpacing(8)
 
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("Enter approved URL (e.g. wikipedia.org, github.com, or canvas.edu)...")
+        self.url_input.setPlaceholderText("Enter website address (e.g. wikipedia.org, github.com, canvas.edu)...")
         add_row.addWidget(self.url_input, stretch=3)
 
         self.category_combo = QComboBox()
         self.category_combo.addItems(["Study & Reference", "School / University", "Programming Docs", "Research", "Custom"])
         add_row.addWidget(self.category_combo, stretch=1)
 
-        add_btn = QPushButton("+ Add to Whitelist")
+        add_btn = QPushButton("+ Add Website")
         add_btn.setProperty("class", "primary")
         add_btn.clicked.connect(self._on_add_website)
         add_row.addWidget(add_btn)
 
-        preset_btn = QPushButton("Add Study Pack")
+        preset_btn = QPushButton("📚  Add Study Pack")
         preset_btn.setProperty("class", "secondary")
         preset_btn.clicked.connect(self._add_preset_study_sites)
         add_row.addWidget(preset_btn)
@@ -137,17 +140,11 @@ class WebsitesTab(QWidget):
         self.search_input.textChanged.connect(self.load_rules)
         tools_row.addWidget(self.search_input, stretch=2)
 
-        # Subtle separator
-        sep = QFrame()
-        sep.setFrameShape(QFrame.VLine)
-        sep.setStyleSheet("color: #30363d;")
-        tools_row.addWidget(sep)
-
         # Tester
-        tools_row.addWidget(QLabel("Test URL:"))
+        tools_row.addWidget(QLabel("Test a Website:"))
         self.test_input = QLineEdit()
-        self.test_input.setPlaceholderText("e.g. google.com or wikipedia.org")
-        self.test_input.setFixedWidth(200)
+        self.test_input.setPlaceholderText("e.g. youtube.com or wikipedia.org")
+        self.test_input.setFixedWidth(220)
         tools_row.addWidget(self.test_input)
 
         test_btn = QPushButton("Check Access")
@@ -163,21 +160,18 @@ class WebsitesTab(QWidget):
         panel_layout.addLayout(tools_row)
         layout.addWidget(panel)
 
-        # Table of Approved Websites
-        self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Approved Domain", "Full URL", "Category", "Access Status", "Actions"])
+        # Table of Approved Websites (3 Clean Columns)
+        self.table = QTableWidget(0, 3)
+        self.table.setHorizontalHeaderLabels(["Approved Website Domain", "Category", "Actions"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
-        self.table.verticalHeader().setVisible(False)  # Remove ugly row index numbers
-        self.table.verticalHeader().setDefaultSectionSize(40)  # Comfortable spacious rows
+        self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(40)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
-        self.table.setShowGrid(False)  # Cleaner modern borderless grid
+        self.table.setShowGrid(False)
         layout.addWidget(self.table)
 
-        self._update_mode_button()
         self.load_rules()
 
     def _update_mode_button(self):
@@ -309,49 +303,35 @@ class WebsitesTab(QWidget):
         self.table.setRowCount(len(filtered))
         for row, r in enumerate(filtered):
             # Domain
-            dom_item = QTableWidgetItem(f"🌐  {r.domain}")
+            dom_item = QTableWidgetItem(f"🌐   {r.domain}")
             dom_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
             self.table.setItem(row, 0, dom_item)
 
-            # Full URL
-            url_item = QTableWidgetItem(r.url)
-            url_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
-            self.table.setItem(row, 1, url_item)
-
             # Category
-            cat_item = QTableWidgetItem(r.category)
+            cat_item = QTableWidgetItem(f"📚  {r.category}")
             cat_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
-            self.table.setItem(row, 2, cat_item)
+            self.table.setItem(row, 1, cat_item)
 
-            # Status Badge
-            perm_item = QTableWidgetItem("● ALLOWED" if r.rule_type == "whitelist" else "⛔ BLOCKED")
-            perm_item.setTextAlignment(Qt.AlignCenter)
-            if r.rule_type == "whitelist":
-                perm_item.setForeground(Qt.GlobalColor.green)
-            else:
-                perm_item.setForeground(Qt.GlobalColor.red)
-            self.table.setItem(row, 3, perm_item)
-
-            # Actions cell
+            # Actions cell (Open in Browser & Remove)
             actions_widget = QWidget()
             act_layout = QHBoxLayout(actions_widget)
             act_layout.setContentsMargins(4, 4, 4, 4)
             act_layout.setSpacing(6)
 
-            open_btn = QPushButton("Open")
+            open_btn = QPushButton("Open in Browser")
             open_btn.setProperty("class", "secondary")
-            open_btn.setFixedHeight(26)
+            open_btn.setFixedHeight(28)
             full_url = r.url if "://" in r.url else f"https://{r.domain}"
             open_btn.clicked.connect(lambda _, u=full_url: webbrowser.open(u))
             act_layout.addWidget(open_btn)
 
-            del_btn = QPushButton("Remove")
+            del_btn = QPushButton("✕ Remove")
             del_btn.setProperty("class", "danger")
-            del_btn.setFixedHeight(26)
+            del_btn.setFixedHeight(28)
             del_btn.clicked.connect(lambda _, d=r.domain: self._delete_rule(d))
             act_layout.addWidget(del_btn)
 
-            self.table.setCellWidget(row, 4, actions_widget)
+            self.table.setCellWidget(row, 2, actions_widget)
 
     def _delete_rule(self, domain: str):
         self.db.remove_website_rule(domain)

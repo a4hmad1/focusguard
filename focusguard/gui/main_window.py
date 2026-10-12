@@ -75,6 +75,9 @@ class MainWindow(QMainWindow):
         content_layout.addWidget(self.stacked_pages)
         main_layout.addWidget(content_container, stretch=1)
 
+        # Connect Dashboard quick navigation
+        self.dashboard_tab.navigate_to_tab.connect(self.nav_list.setCurrentRow)
+
         # Real-time Update Timer (1 Hz)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._on_tick)
@@ -116,11 +119,11 @@ class MainWindow(QMainWindow):
         self.nav_list.setObjectName("nav_list")
         
         items = [
-            ("⚡  Dashboard", 0),
-            ("🌐  Websites", 1),
-            ("💻  Applications", 2),
-            ("📅  Schedules", 3),
-            ("⚙️  Settings", 4),
+            ("⚡  Focus Shield", 0),
+            ("🌐  Allowed Websites", 1),
+            ("💻  Blocked Apps", 2),
+            ("📅  Study Schedules", 3),
+            ("⚙️  Settings & Help", 4),
         ]
         for text, idx in items:
             it = QListWidgetItem(text)
@@ -265,11 +268,11 @@ class MainWindow(QMainWindow):
     def _on_nav_change(self, row: int):
         self.stacked_pages.setCurrentIndex(row)
         titles = [
-            "Dashboard",
-            "Website Whitelist",
-            "Applications",
+            "Focus Shield",
+            "Allowed Websites",
+            "Blocked Applications",
             "Study Schedules",
-            "Settings"
+            "Settings & Help"
         ]
         if 0 <= row < len(titles):
             self.page_title_lbl.setText(titles[row])

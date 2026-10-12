@@ -57,18 +57,18 @@ class SettingsTab(QWidget):
         t_layout.addLayout(t_row)
         layout.addWidget(theme_card)
 
-        # Section 2: Browser Filtering & PAC Status
-        pac_card, pac_layout = self._create_card("Browser URL Whitelist & System Proxy")
+        # Section 2: How Website Blocking Works
+        pac_card, pac_layout = self._create_card("🌐   How Website Blocking Works")
         
-        pac_status = "Active" if self.blocker.proxy_mgr.is_enabled() else "Inactive (Starts when Focus Shield is turned on)"
-        p_lbl = QLabel(f"Browser PAC Policy: <strong>http://127.0.0.1:{DEFAULT_BLOCK_PORT}/proxy.pac</strong> ({pac_status})")
-        pac_layout.addWidget(p_lbl)
-
         p_info = QLabel(
-            "FocusGuard routes browser traffic through an automated PAC script that permits ONLY your saved "
-            "whitelisted URLs to open, while immediately deflecting all other web traffic to the local block landing page."
+            "FocusGuard automatically configures your web browsers (Chrome, Firefox, Edge, Brave) "
+            "to permit <strong>ONLY your approved websites</strong> to open. "
+            "If you try to open any unapproved website (such as YouTube, Reddit, or gaming sites), "
+            "access will be blocked with a study shield landing page.<br><br>"
+            "When your study timer finishes or you click <strong>Stop Focus</strong>, "
+            "all websites and applications unlock automatically."
         )
-        p_info.setStyleSheet("font-size: 12px; color: #64748b;")
+        p_info.setStyleSheet("font-size: 13px; color: #64748b; line-height: 1.4;")
         p_info.setWordWrap(True)
         pac_layout.addWidget(p_info)
 
@@ -79,25 +79,26 @@ class SettingsTab(QWidget):
         layout.addWidget(pac_card)
 
         # Section 3: Emergency Recovery
-        rec_card, rec_layout = self._create_card("Emergency Recovery Fail-Safe")
+        rec_card, rec_layout = self._create_card("🚨   Emergency Unlock")
 
         rec_desc = QLabel(
-            "Accidentally locked out of a critical academic resource? "
-            "Emergency Recovery instantly terminates all active restrictions, restores normal browser proxy "
-            "settings, and unblocks all applications."
+            "Need to immediately stop all restrictions? "
+            "Emergency Unlock instantly ends any active session, removes browser blocks, and restores unrestricted internet access."
         )
-        rec_desc.setStyleSheet("font-size: 12px; color: #64748b;")
+        rec_desc.setStyleSheet("font-size: 13px; color: #64748b;")
         rec_desc.setWordWrap(True)
         rec_layout.addWidget(rec_desc)
 
         rec_btn_row = QHBoxLayout()
-        emergency_btn = QPushButton("Trigger Emergency Unblock")
+        emergency_btn = QPushButton("🚨  Trigger Emergency Unlock")
         emergency_btn.setProperty("class", "danger")
+        emergency_btn.setFixedHeight(34)
         emergency_btn.clicked.connect(self._on_emergency_unblock)
         rec_btn_row.addWidget(emergency_btn)
 
         flush_dns_btn = QPushButton("Flush OS DNS Cache")
         flush_dns_btn.setProperty("class", "secondary")
+        flush_dns_btn.setFixedHeight(34)
         flush_dns_btn.clicked.connect(self._on_flush_dns)
         rec_btn_row.addWidget(flush_dns_btn)
 
