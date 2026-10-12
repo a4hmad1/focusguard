@@ -22,9 +22,9 @@ from focusguard.gui.tabs import (
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"{APP_NAME} - Study Shield & Application Blocker v{APP_VERSION}")
-        self.resize(1120, 740)
-        self.setMinimumSize(940, 620)
+        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION} - Study Shield")
+        self.resize(1080, 700)
+        self.setMinimumSize(900, 600)
 
         # Initialize Core Services
         self.db = Database()
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
         self.scheduler = Scheduler(self.db, self.app_blocker, self.website_blocker)
         self.scheduler.start_background_loop()
 
-        # Load Theme Preference (Default: black / dark)
+        # Load Theme (Default: black)
         self.current_theme = self.db.get_setting("theme", default="black")
         self.setStyleSheet(get_theme_stylesheet(self.current_theme))
 
@@ -85,29 +85,31 @@ class MainWindow(QMainWindow):
     def _create_sidebar(self) -> QFrame:
         sidebar = QFrame()
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(230)
+        sidebar.setFixedWidth(210)
         layout = QVBoxLayout(sidebar)
-        layout.setContentsMargins(14, 20, 14, 20)
+        layout.setContentsMargins(12, 18, 12, 18)
         layout.setSpacing(10)
 
-        # Brand Header
+        # Brand / Logo Header
         brand_box = QHBoxLayout()
+        brand_box.setSpacing(8)
+        
         logo_icon = QLabel("🛡️")
-        logo_icon.setStyleSheet("font-size: 24px;")
+        logo_icon.setStyleSheet("font-size: 22px;")
         
         brand_text_box = QVBoxLayout()
         brand_text_box.setSpacing(0)
         brand_title = QLabel(APP_NAME)
-        brand_title.setStyleSheet("font-size: 17px; font-weight: 800; letter-spacing: -0.4px;")
-        brand_sub = QLabel("Study & Focus Shield")
-        brand_sub.setStyleSheet("font-size: 11px; font-weight: 500; color: #64748b;")
+        brand_title.setStyleSheet("font-size: 16px; font-weight: 800; letter-spacing: -0.3px;")
+        brand_sub = QLabel("Study Shield")
+        brand_sub.setStyleSheet("font-size: 11px; font-weight: 500; color: #8b949e;")
         brand_text_box.addWidget(brand_title)
         brand_text_box.addWidget(brand_sub)
 
         brand_box.addWidget(logo_icon)
         brand_box.addLayout(brand_text_box)
         layout.addLayout(brand_box)
-        layout.addSpacing(14)
+        layout.addSpacing(10)
 
         # Nav Items List
         self.nav_list = QListWidget()
@@ -115,7 +117,7 @@ class MainWindow(QMainWindow):
         
         items = [
             ("⚡  Dashboard", 0),
-            ("🌐  Websites Whitelist", 1),
+            ("🌐  Websites", 1),
             ("💻  Applications", 2),
             ("📅  Schedules", 3),
             ("⚙️  Settings", 4),
@@ -128,9 +130,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.nav_list)
         layout.addStretch()
 
-        # Policy & Version Pill
-        ver_lbl = QLabel(f"{APP_NAME} Desktop v{APP_VERSION}")
-        ver_lbl.setStyleSheet("color: #64748b; font-size: 11px;")
+        # Version Footer
+        ver_lbl = QLabel(f"v{APP_VERSION}")
+        ver_lbl.setStyleSheet("color: #6e7681; font-size: 11px;")
         ver_lbl.setAlignment(Qt.AlignCenter)
         layout.addWidget(ver_lbl)
 
@@ -139,20 +141,20 @@ class MainWindow(QMainWindow):
     def _create_header_bar(self) -> QFrame:
         header = QFrame()
         header.setObjectName("header_bar")
-        header.setFixedHeight(56)
+        header.setFixedHeight(50)
         layout = QHBoxLayout(header)
         layout.setContentsMargins(20, 0, 20, 0)
-        layout.setSpacing(12)
+        layout.setSpacing(10)
 
-        self.page_title_lbl = QLabel("Dashboard Overview")
-        self.page_title_lbl.setStyleSheet("font-size: 15px; font-weight: 700;")
+        self.page_title_lbl = QLabel("Dashboard")
+        self.page_title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #8b949e;")
         layout.addWidget(self.page_title_lbl)
         layout.addStretch()
 
-        # Theme Switcher Button (White / Black)
+        # Theme Switcher Button
         self.theme_btn = QPushButton()
         self.theme_btn.setProperty("class", "secondary")
-        self.theme_btn.setFixedHeight(30)
+        self.theme_btn.setFixedHeight(28)
         self._update_theme_button_text()
         self.theme_btn.clicked.connect(self._toggle_theme)
         layout.addWidget(self.theme_btn)
@@ -160,20 +162,20 @@ class MainWindow(QMainWindow):
         # Status Pill
         self.status_pill = QLabel("○ SHIELD IDLE")
         self.status_pill.setStyleSheet("""
-            background-color: rgba(148, 163, 184, 0.12);
-            color: #64748b;
-            border: 1px solid rgba(148, 163, 184, 0.3);
+            background-color: rgba(110, 118, 129, 0.12);
+            color: #8b949e;
+            border: 1px solid rgba(110, 118, 129, 0.3);
             border-radius: 4px;
-            padding: 4px 10px;
+            padding: 3px 8px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 600;
         """)
         layout.addWidget(self.status_pill)
 
         # Emergency Unlock Header Button
         em_btn = QPushButton("Emergency Unlock")
         em_btn.setProperty("class", "danger")
-        em_btn.setFixedHeight(30)
+        em_btn.setFixedHeight(28)
         em_btn.clicked.connect(self._quick_emergency_unlock)
         layout.addWidget(em_btn)
 
@@ -195,11 +197,11 @@ class MainWindow(QMainWindow):
     def _on_nav_change(self, row: int):
         self.stacked_pages.setCurrentIndex(row)
         titles = [
-            "Dashboard Overview",
-            "Website Access & Whitelist Policy",
-            "Application & Process Management",
-            "Recurring Study Schedules",
-            "Settings & System Controls"
+            "Dashboard",
+            "Website Whitelist",
+            "Applications",
+            "Study Schedules",
+            "Settings"
         ]
         if 0 <= row < len(titles):
             self.page_title_lbl.setText(titles[row])
@@ -209,26 +211,26 @@ class MainWindow(QMainWindow):
 
         status = self.scheduler.get_current_status()
         if status["is_blocking_active"]:
-            self.status_pill.setText("● FOCUS SHIELD ACTIVE")
+            self.status_pill.setText("● SHIELD ACTIVE")
             self.status_pill.setStyleSheet("""
-                background-color: rgba(34, 197, 94, 0.18);
-                color: #16a34a;
-                border: 1px solid rgba(34, 197, 94, 0.4);
+                background-color: rgba(46, 160, 67, 0.15);
+                color: #3fb950;
+                border: 1px solid rgba(46, 160, 67, 0.35);
                 border-radius: 4px;
-                padding: 4px 10px;
+                padding: 3px 8px;
                 font-size: 11px;
-                font-weight: 700;
+                font-weight: 600;
             """)
         else:
             self.status_pill.setText("○ SHIELD IDLE")
             self.status_pill.setStyleSheet("""
-                background-color: rgba(148, 163, 184, 0.12);
-                color: #64748b;
-                border: 1px solid rgba(148, 163, 184, 0.3);
+                background-color: rgba(110, 118, 129, 0.12);
+                color: #8b949e;
+                border: 1px solid rgba(110, 118, 129, 0.3);
                 border-radius: 4px;
-                padding: 4px 10px;
+                padding: 3px 8px;
                 font-size: 11px;
-                font-weight: 700;
+                font-weight: 600;
             """)
 
     def _quick_emergency_unlock(self):

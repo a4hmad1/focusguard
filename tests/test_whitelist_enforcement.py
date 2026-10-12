@@ -57,7 +57,7 @@ def test_theme_stylesheets():
 
     dark = get_theme_stylesheet("black")
     assert dark == FORMAL_DARK_THEME_QSS
-    assert "#0b0f19" in dark
+    assert "#0d1117" in dark
 
 def test_proxy_manager_instantiation():
     pm = SystemProxyManager()

@@ -11,7 +11,7 @@ def run_gui():
         app = QApplication(sys.argv)
     
     app.setApplicationName("FocusGuard")
-    app.setApplicationDisplayName("FocusGuard - Study Distraction Shield")
+    app.setApplicationDisplayName("FocusGuard")
     
     window = MainWindow()
     window.show()

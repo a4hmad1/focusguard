@@ -1,4 +1,4 @@
-"""Formal Websites Whitelist & Access Management Tab."""
+"""Website Whitelist & Access Control Tab - Modern Professional Redesign."""
 
 import webbrowser
 from PySide6.QtWidgets import (
@@ -18,108 +18,113 @@ class WebsitesTab(QWidget):
         self.blocker = website_blocker
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(14)
+        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setSpacing(16)
 
-        # Header with Policy Information
+        # Header with Title and Mode Toggle
         header_row = QHBoxLayout()
         title_box = QVBoxLayout()
-        title_box.setSpacing(2)
-        title = QLabel("Website Access & Whitelist Policy")
+        title_box.setSpacing(3)
+        
+        title = QLabel("Website Whitelist & Browser Shield")
         title.setProperty("class", "heading_large")
-        subtitle = QLabel("Only explicitly saved URLs remain open in browsers. All other websites are blocked.")
+        subtitle = QLabel("All websites in all browsers are blocked except your approved URLs below.")
         subtitle.setProperty("class", "subtext")
+        
         title_box.addWidget(title)
         title_box.addWidget(subtitle)
         header_row.addLayout(title_box)
         header_row.addStretch()
 
-        # Mode Toggle Button
-        self.mode_btn = QPushButton()
+        self.mode_badge = QLabel("● STRICT WHITELIST")
+        self.mode_badge.setProperty("class", "badge_active")
+        header_row.addWidget(self.mode_badge)
+
+        self.mode_btn = QPushButton("Switch Mode")
+        self.mode_btn.setProperty("class", "secondary")
         self.mode_btn.clicked.connect(self._toggle_mode)
         header_row.addWidget(self.mode_btn)
+
         layout.addLayout(header_row)
 
-        # Policy Alert Card
-        self.policy_card = QFrame()
-        self.policy_card.setProperty("class", "card")
-        p_layout = QHBoxLayout(self.policy_card)
-        p_layout.setContentsMargins(12, 10, 12, 10)
-        self.policy_label = QLabel(
-            "🛡️ <strong>STRICT WHITELIST ACTIVE:</strong> Every website on the internet is blocked across all browsers, "
-            "<strong>EXCEPT</strong> the approved URLs saved in your list below."
-        )
-        self.policy_label.setStyleSheet("font-size: 12px;")
-        p_layout.addWidget(self.policy_label)
-        layout.addWidget(self.policy_card)
+        # Unified Action Panel (Add Website & Study Pack)
+        panel = QFrame()
+        panel.setProperty("class", "card")
+        panel_layout = QVBoxLayout(panel)
+        panel_layout.setContentsMargins(14, 14, 14, 14)
+        panel_layout.setSpacing(12)
 
-        # Add Website Form Card
-        add_frame = QFrame()
-        add_frame.setObjectName("add_frame")
-        add_frame.setProperty("class", "card")
-        add_layout = QHBoxLayout(add_frame)
-        add_layout.setContentsMargins(12, 10, 12, 10)
-        add_layout.setSpacing(8)
+        # Row 1: Add Input + Category + Add Button
+        add_row = QHBoxLayout()
+        add_row.setSpacing(8)
 
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("Enter approved URL (e.g. wikipedia.org, docs.python.org, or canvas.edu)")
-        add_layout.addWidget(self.url_input, stretch=3)
+        self.url_input.setPlaceholderText("Enter approved URL (e.g. wikipedia.org, github.com, or canvas.edu)...")
+        add_row.addWidget(self.url_input, stretch=3)
 
         self.category_combo = QComboBox()
         self.category_combo.addItems(["Study & Reference", "School / University", "Programming Docs", "Research", "Custom"])
-        add_layout.addWidget(self.category_combo, stretch=1)
+        add_row.addWidget(self.category_combo, stretch=1)
 
-        add_btn = QPushButton("+ Save & Approve URL")
+        add_btn = QPushButton("+ Add to Whitelist")
+        add_btn.setProperty("class", "primary")
         add_btn.clicked.connect(self._on_add_website)
-        add_layout.addWidget(add_btn)
+        add_row.addWidget(add_btn)
 
         preset_btn = QPushButton("Add Study Pack")
         preset_btn.setProperty("class", "secondary")
         preset_btn.clicked.connect(self._add_preset_study_sites)
-        add_layout.addWidget(preset_btn)
+        add_row.addWidget(preset_btn)
 
-        layout.addWidget(add_frame)
+        panel_layout.addLayout(add_row)
 
-        # Search Bar & Interactive URL Checker
-        checker_frame = QFrame()
-        checker_frame.setProperty("class", "card")
-        chk_layout = QHBoxLayout(checker_frame)
-        chk_layout.setContentsMargins(12, 8, 12, 8)
-        chk_layout.setSpacing(10)
+        # Row 2: Search filter + Test URL access validator
+        tools_row = QHBoxLayout()
+        tools_row.setSpacing(12)
 
-        chk_layout.addWidget(QLabel("🔍 <strong>Test URL Access:</strong>"))
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search approved websites...")
+        self.search_input.textChanged.connect(self.load_rules)
+        tools_row.addWidget(self.search_input, stretch=2)
+
+        # Subtle separator
+        sep = QFrame()
+        sep.setFrameShape(QFrame.VLine)
+        sep.setStyleSheet("color: #30363d;")
+        tools_row.addWidget(sep)
+
+        # Tester
+        tools_row.addWidget(QLabel("Test URL:"))
         self.test_input = QLineEdit()
-        self.test_input.setPlaceholderText("Type any website (e.g. google.com or wikipedia.org)...")
-        chk_layout.addWidget(self.test_input, stretch=2)
+        self.test_input.setPlaceholderText("e.g. google.com or wikipedia.org")
+        self.test_input.setFixedWidth(200)
+        tools_row.addWidget(self.test_input)
 
-        test_btn = QPushButton("Check Status")
+        test_btn = QPushButton("Check Access")
         test_btn.setProperty("class", "secondary")
         test_btn.clicked.connect(self._check_test_url)
-        chk_layout.addWidget(test_btn)
+        tools_row.addWidget(test_btn)
 
-        self.test_result_label = QLabel("Result: Ready to test")
-        self.test_result_label.setStyleSheet("font-size: 12px; font-weight: 700; color: #64748b;")
-        chk_layout.addWidget(self.test_result_label, stretch=1)
+        self.test_result_label = QLabel("Ready")
+        self.test_result_label.setProperty("class", "subtext")
+        self.test_result_label.setStyleSheet("font-weight: 600;")
+        tools_row.addWidget(self.test_result_label)
 
-        layout.addWidget(checker_frame)
-
-        # Search filter
-        filter_row = QHBoxLayout()
-        self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search approved URLs...")
-        self.search_input.textChanged.connect(self.load_rules)
-        filter_row.addWidget(self.search_input)
-        layout.addLayout(filter_row)
+        panel_layout.addLayout(tools_row)
+        layout.addWidget(panel)
 
         # Table of Approved Websites
         self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Approved Domain", "Full URL", "Category", "Access Permission", "Actions"])
+        self.table.setHorizontalHeaderLabels(["Approved Domain", "Full URL", "Category", "Access Status", "Actions"])
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        self.table.verticalHeader().setVisible(False)  # Remove ugly row index numbers
+        self.table.verticalHeader().setDefaultSectionSize(40)  # Comfortable spacious rows
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setShowGrid(False)  # Cleaner modern borderless grid
         layout.addWidget(self.table)
 
         self._update_mode_button()
@@ -128,18 +133,30 @@ class WebsitesTab(QWidget):
     def _update_mode_button(self):
         curr_mode = self.blocker.get_mode()
         if curr_mode == "whitelist":
-            self.mode_btn.setText("Policy: STRICT WHITELIST (Only Approved URLs Open)")
-            self.mode_btn.setStyleSheet("background-color: #16a34a; border-color: #15803d; color: white;")
-            self.policy_label.setText(
-                "🛡️ <strong>STRICT WHITELIST ACTIVE:</strong> All websites across all browsers are blocked, "
-                "<strong>EXCEPT</strong> your saved approved URLs below."
-            )
+            self.mode_badge.setText("● STRICT WHITELIST ACTIVE")
+            self.mode_badge.setProperty("class", "badge_active")
+            self.mode_badge.setStyleSheet("""
+                background-color: rgba(46, 160, 67, 0.15);
+                color: #3fb950;
+                border: 1px solid rgba(46, 160, 67, 0.35);
+                border-radius: 4px;
+                padding: 4px 10px;
+                font-size: 11px;
+                font-weight: 700;
+            """)
+            self.mode_btn.setText("Switch to Blacklist Mode")
         else:
-            self.mode_btn.setText("Policy: BLACKLIST (Blocks Selected Websites)")
-            self.mode_btn.setStyleSheet("background-color: #2563eb; border-color: #1d4ed8; color: white;")
-            self.policy_label.setText(
-                "⚠️ <strong>BLACKLIST MODE:</strong> Web browsing is open by default, only explicitly blocked websites are restricted."
-            )
+            self.mode_badge.setText("⚠️ BLACKLIST MODE")
+            self.mode_badge.setStyleSheet("""
+                background-color: rgba(31, 111, 235, 0.15);
+                color: #58a6ff;
+                border: 1px solid rgba(31, 111, 235, 0.35);
+                border-radius: 4px;
+                padding: 4px 10px;
+                font-size: 11px;
+                font-weight: 700;
+            """)
+            self.mode_btn.setText("Switch to Whitelist Mode")
 
     def _toggle_mode(self):
         curr = self.blocker.get_mode()
@@ -148,8 +165,8 @@ class WebsitesTab(QWidget):
             self.blocker.set_mode(new_mode)
             self._update_mode_button()
             self.load_rules()
-        except PermissionError as pe:
-            QMessageBox.warning(self, "Permission Note", str(pe))
+        except Exception as e:
+            QMessageBox.warning(self, "Notice", str(e))
 
     def _check_test_url(self):
         raw = self.test_input.text().strip()
@@ -157,11 +174,11 @@ class WebsitesTab(QWidget):
             return
         is_allowed = self.blocker.is_url_allowed(raw)
         if is_allowed:
-            self.test_result_label.setText("✅ ALLOWED (In Saved Whitelist)")
-            self.test_result_label.setStyleSheet("color: #16a34a; font-weight: 700;")
+            self.test_result_label.setText("ALLOWED (Whitelisted)")
+            self.test_result_label.setStyleSheet("color: #3fb950; font-weight: 700;")
         else:
-            self.test_result_label.setText("⛔ BLOCKED (All non-saved sites blocked)")
-            self.test_result_label.setStyleSheet("color: #dc2626; font-weight: 700;")
+            self.test_result_label.setText("BLOCKED (Unapproved)")
+            self.test_result_label.setStyleSheet("color: #f85149; font-weight: 700;")
 
     def _on_add_website(self):
         raw_url = self.url_input.text().strip()
@@ -170,7 +187,7 @@ class WebsitesTab(QWidget):
 
         domain = WebsiteRule.extract_domain(raw_url)
         if not domain:
-            QMessageBox.warning(self, "Invalid URL", "Please enter a valid URL or domain.")
+            QMessageBox.warning(self, "Invalid URL", "Please enter a valid website URL or domain.")
             return
 
         category = self.category_combo.currentText()
@@ -190,7 +207,6 @@ class WebsitesTab(QWidget):
             pass
 
         self.load_rules()
-        QMessageBox.information(self, "URL Approved", f"'{domain}' is saved in your whitelist and will remain accessible.")
 
     def _add_preset_study_sites(self):
         presets = [
@@ -225,32 +241,45 @@ class WebsitesTab(QWidget):
         self.table.setRowCount(len(filtered))
         for row, r in enumerate(filtered):
             # Domain
-            self.table.setItem(row, 0, QTableWidgetItem(r.domain))
+            dom_item = QTableWidgetItem(f"🌐  {r.domain}")
+            dom_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            self.table.setItem(row, 0, dom_item)
+
             # Full URL
-            self.table.setItem(row, 1, QTableWidgetItem(r.url))
+            url_item = QTableWidgetItem(r.url)
+            url_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            self.table.setItem(row, 1, url_item)
+
             # Category
-            self.table.setItem(row, 2, QTableWidgetItem(r.category))
+            cat_item = QTableWidgetItem(r.category)
+            cat_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            self.table.setItem(row, 2, cat_item)
 
             # Status Badge
-            perm_item = QTableWidgetItem("● ALLOWED (OPEN)" if r.rule_type == "whitelist" else "⛔ BLOCKED")
+            perm_item = QTableWidgetItem("● ALLOWED" if r.rule_type == "whitelist" else "⛔ BLOCKED")
             perm_item.setTextAlignment(Qt.AlignCenter)
-            perm_item.setForeground(Qt.green if r.rule_type == "whitelist" else Qt.red)
+            if r.rule_type == "whitelist":
+                perm_item.setForeground(Qt.GlobalColor.green)
+            else:
+                perm_item.setForeground(Qt.GlobalColor.red)
             self.table.setItem(row, 3, perm_item)
 
             # Actions cell
             actions_widget = QWidget()
             act_layout = QHBoxLayout(actions_widget)
-            act_layout.setContentsMargins(2, 2, 2, 2)
+            act_layout.setContentsMargins(4, 4, 4, 4)
             act_layout.setSpacing(6)
 
             open_btn = QPushButton("Open")
             open_btn.setProperty("class", "secondary")
+            open_btn.setFixedHeight(26)
             full_url = r.url if "://" in r.url else f"https://{r.domain}"
             open_btn.clicked.connect(lambda _, u=full_url: webbrowser.open(u))
             act_layout.addWidget(open_btn)
 
             del_btn = QPushButton("Remove")
             del_btn.setProperty("class", "danger")
+            del_btn.setFixedHeight(26)
             del_btn.clicked.connect(lambda _, d=r.domain: self._delete_rule(d))
             act_layout.addWidget(del_btn)
 
