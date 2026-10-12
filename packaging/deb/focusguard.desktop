@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=FocusGuard
+GenericName=Study Distraction Blocker
+Comment=Cross-Platform Website and Application Blocking Desktop Software
+Exec=/usr/bin/focusguard %U
+Icon=focusguard
+Terminal=false
+Type=Application
+Categories=Utility;Education;Productivity;
+StartupNotify=true
+Keywords=focus;study;blocker;productivity;distraction;whitelist;
