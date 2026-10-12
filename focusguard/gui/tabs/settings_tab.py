@@ -1,17 +1,18 @@
-"""Settings, Emergency Recovery, and Security Tab."""
+"""Formal Settings, Emergency Recovery, and Security Tab."""
 
 import webbrowser
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
-    QFrame, QMessageBox, QTextEdit, QScrollArea
+    QFrame, QMessageBox, QScrollArea, QComboBox
 )
 from PySide6.QtCore import Qt
-from focusguard.core.config import is_admin, get_hosts_path, get_hosts_backup_path, DEFAULT_BLOCK_PORT
+from focusguard.core.config import is_admin, DEFAULT_BLOCK_PORT
 from focusguard.core.database import Database
 from focusguard.engine.hosts_manager import HostsManager
 from focusguard.engine.website_blocker import WebsiteBlocker
 from focusguard.engine.scheduler import Scheduler
+from focusguard.gui.theme import get_theme_stylesheet
 
 class SettingsTab(QWidget):
     def __init__(self, db: Database, blocker: WebsiteBlocker, scheduler: Scheduler):
@@ -27,46 +28,69 @@ class SettingsTab(QWidget):
 
         container = QWidget()
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
 
         # Header
         title = QLabel("System Settings & Emergency Recovery")
         title.setProperty("class", "heading_large")
-        subtitle = QLabel("Privilege checks, hosts backup recovery, DNS maintenance, and audit history.")
+        subtitle = QLabel("Desktop appearance, browser proxy status, privileges, and recovery options.")
         subtitle.setProperty("class", "subtext")
         layout.addWidget(title)
         layout.addWidget(subtitle)
 
-        # Section 1: System Privileges & Security
-        priv_card = self._create_card("System Privileges & Permissions")
-        priv_layout = QVBoxLayout(priv_card)
+        # Section 1: Appearance (White / Black Theme)
+        theme_card = self._create_card("Desktop Appearance & Color Theme")
+        t_layout = QHBoxLayout(theme_card)
+        t_layout.setContentsMargins(14, 12, 14, 12)
+        t_layout.addWidget(QLabel("Interface Theme:"))
 
-        admin_status = "Granted (Root / Administrator)" if is_admin() else "Standard User (Limited hosts modification)"
-        color = "#22c55e" if is_admin() else "#f59e0b"
-        status_lbl = QLabel(f"Administrative Status: <strong style='color:{color};'>{admin_status}</strong>")
-        priv_layout.addWidget(status_lbl)
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(["Black / Dark Mode", "White / Light Mode"])
+        saved_theme = self.db.get_setting("theme", default="black")
+        if saved_theme in ("white", "light"):
+            self.theme_combo.setCurrentIndex(1)
+        else:
+            self.theme_combo.setCurrentIndex(0)
+        self.theme_combo.currentIndexChanged.connect(self._on_theme_changed)
+        t_layout.addWidget(self.theme_combo)
+        t_layout.addStretch()
+        layout.addWidget(theme_card)
 
-        info_lbl = QLabel(
-            "Note: Modifying /etc/hosts (Linux) or C:\\Windows\\System32\\drivers\\etc\\hosts (Windows) "
-            "requires administrative privileges. Run FocusGuard as administrator or use the background service."
+        # Section 2: Browser Filtering & PAC Status
+        pac_card = self._create_card("Browser URL Whitelist & System Proxy")
+        pac_layout = QVBoxLayout(pac_card)
+        pac_layout.setContentsMargins(14, 12, 14, 12)
+        
+        pac_status = "Active" if self.blocker.proxy_mgr.is_enabled() else "Inactive (Starts when Focus Shield is turned on)"
+        p_lbl = QLabel(f"Browser PAC Policy: <strong>http://127.0.0.1:{DEFAULT_BLOCK_PORT}/proxy.pac</strong> ({pac_status})")
+        pac_layout.addWidget(p_lbl)
+
+        p_info = QLabel(
+            "FocusGuard routes browser traffic through an automated PAC script that permits ONLY your saved "
+            "whitelisted URLs to open, while immediately deflecting all other web traffic to the local block landing page."
         )
-        info_lbl.setStyleSheet("color: #94a3b8; font-size: 12px;")
-        info_lbl.setWordWrap(True)
-        priv_layout.addWidget(info_lbl)
+        p_info.setStyleSheet("font-size: 12px; color: #64748b;")
+        p_info.setWordWrap(True)
+        pac_layout.addWidget(p_info)
 
-        layout.addWidget(priv_card)
+        preview_btn = QPushButton("Preview 'Access Blocked' Landing Page in Browser")
+        preview_btn.setProperty("class", "secondary")
+        preview_btn.clicked.connect(lambda: webbrowser.open(f"http://127.0.0.1:{DEFAULT_BLOCK_PORT}"))
+        pac_layout.addWidget(preview_btn, alignment=Qt.AlignLeft)
+        layout.addWidget(pac_card)
 
-        # Section 2: Emergency Recovery
+        # Section 3: Emergency Recovery
         rec_card = self._create_card("Emergency Recovery Fail-Safe")
         rec_layout = QVBoxLayout(rec_card)
+        rec_layout.setContentsMargins(14, 12, 14, 12)
 
         rec_desc = QLabel(
-            "Accidentally locked yourself out of an essential resource? "
-            "Emergency Recovery instantly terminates all active sessions, lifts application locks, "
-            "and restores your clean hosts file."
+            "Accidentally locked out of a critical academic resource? "
+            "Emergency Recovery instantly terminates all active restrictions, restores normal browser proxy "
+            "settings, and unblocks all applications."
         )
-        rec_desc.setStyleSheet("color: #94a3b8; font-size: 13px;")
+        rec_desc.setStyleSheet("font-size: 12px; color: #64748b;")
         rec_desc.setWordWrap(True)
         rec_layout.addWidget(rec_desc)
 
@@ -76,11 +100,6 @@ class SettingsTab(QWidget):
         emergency_btn.clicked.connect(self._on_emergency_unblock)
         rec_btn_row.addWidget(emergency_btn)
 
-        restore_bak_btn = QPushButton("Restore Hosts from Backup")
-        restore_bak_btn.setProperty("class", "secondary")
-        restore_bak_btn.clicked.connect(self._on_restore_hosts_backup)
-        rec_btn_row.addWidget(restore_bak_btn)
-
         flush_dns_btn = QPushButton("Flush OS DNS Cache")
         flush_dns_btn.setProperty("class", "secondary")
         flush_dns_btn.clicked.connect(self._on_flush_dns)
@@ -88,57 +107,24 @@ class SettingsTab(QWidget):
 
         rec_btn_row.addStretch()
         rec_layout.addLayout(rec_btn_row)
-
         layout.addWidget(rec_card)
 
-        # Section 3: Local Block Page Server
-        server_card = self._create_card("Local Block Page Web Server")
-        srv_layout = QVBoxLayout(server_card)
-
-        srv_info = QLabel(f"Local block page running at <strong>http://127.0.0.1:{DEFAULT_BLOCK_PORT}</strong>")
-        srv_layout.addWidget(srv_info)
-
-        preview_btn = QPushButton("Preview 'Access Blocked' Page in Browser")
-        preview_btn.setProperty("class", "secondary")
-        preview_btn.clicked.connect(lambda: webbrowser.open(f"http://127.0.0.1:{DEFAULT_BLOCK_PORT}"))
-        srv_layout.addWidget(preview_btn, alignment=Qt.AlignLeft)
-
-        layout.addWidget(server_card)
-
-        # Section 4: Technical Limitations & Bypass Guidance
-        lim_card = self._create_card("Security Model & Technical Limitations")
-        lim_layout = QVBoxLayout(lim_card)
-
-        lim_text = QLabel(
-            "<strong>1. DNS-over-HTTPS (DoH):</strong> Modern browsers (Chrome, Firefox) may bypass system DNS "
-            "using encrypted DNS. FocusGuard redirects known DoH endpoints, but users should disable 'Secure DNS' "
-            "in browser settings for 100% strict enforcement.<br><br>"
-            "<strong>2. VPNs & Proxies:</strong> Third-party VPN tunnels bypass OS-level hosts filtering. Application "
-            "blocking can be used to restrict unauthorized VPN clients.<br><br>"
-            "<strong>3. Core OS Safety:</strong> Essential operating system processes (init, systemd, explorer.exe, dwm.exe) "
-            "are strictly protected and will never be terminated."
-        )
-        lim_text.setStyleSheet("color: #cbd5e1; font-size: 12px; line-height: 1.5;")
-        lim_text.setWordWrap(True)
-        lim_layout.addWidget(lim_text)
-
-        layout.addWidget(lim_card)
-
-        # Section 5: Audit Logs
-        logs_card = self._create_card("Recent Enforcement Audit Logs")
+        # Section 4: Audit Logs
+        logs_card = self._create_card("Enforcement History & Audit Logs")
         logs_layout = QVBoxLayout(logs_card)
+        logs_layout.setContentsMargins(14, 12, 14, 12)
 
         self.logs_table = QTableWidget(0, 4)
         self.logs_table.setHorizontalHeaderLabels(["Timestamp", "Event", "Target", "Details"])
         self.logs_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.logs_table.setFixedHeight(160)
+        self.logs_table.setFixedHeight(140)
         self.logs_table.setEditTriggers(QTableWidget.NoEditTriggers)
         logs_layout.addWidget(self.logs_table)
-
         layout.addWidget(logs_card)
-        layout.addStretch()
 
+        layout.addStretch()
         scroll.setWidget(container)
+
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(scroll)
@@ -148,46 +134,40 @@ class SettingsTab(QWidget):
     def _create_card(self, title_text: str) -> QFrame:
         card = QFrame()
         card.setObjectName("settings_card")
-        card.setStyleSheet("""
-            QFrame#settings_card {
-                background-color: #1e293b;
-                border: 1px solid #334155;
-                border-radius: 12px;
-                padding: 16px;
-            }
-        """)
+        card.setProperty("class", "card")
         t = QLabel(title_text)
         t.setProperty("class", "heading_medium")
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(16, 16, 16, 16)
+        card_layout.setContentsMargins(14, 12, 14, 12)
         card_layout.addWidget(t)
         return card
+
+    def _on_theme_changed(self, idx: int):
+        theme_name = "white" if idx == 1 else "black"
+        self.db.set_setting("theme", theme_name)
+        # Find window ancestor and apply
+        win = self.window()
+        if win:
+            win.setStyleSheet(get_theme_stylesheet(theme_name))
+            if hasattr(win, "current_theme"):
+                win.current_theme = theme_name
+                win._update_theme_button_text()
 
     def _on_emergency_unblock(self):
         confirm = QMessageBox.question(
             self,
             "Confirm Emergency Unblock",
-            "Are you sure you want to lift all restrictions and restore clean access?",
+            "Are you sure you want to lift all restrictions and restore completely open browser access?",
             QMessageBox.Yes | QMessageBox.No
         )
         if confirm == QMessageBox.Yes:
             self.scheduler.cancel_active_sessions()
             try:
                 self.blocker.unblock_all()
-                QMessageBox.information(self, "Unblocked", "All restrictions have been lifted successfully.")
-            except PermissionError as e:
-                QMessageBox.warning(self, "Permission Required", str(e))
+                QMessageBox.information(self, "Unblocked", "All restrictions lifted. Normal web access restored.")
+            except Exception as e:
+                QMessageBox.warning(self, "Notice", str(e))
             self.load_logs()
-
-    def _on_restore_hosts_backup(self):
-        try:
-            success = self.hosts_mgr.restore_from_backup()
-            if success:
-                QMessageBox.information(self, "Restored", "Original hosts file restored from backup.")
-            else:
-                QMessageBox.warning(self, "No Backup", "No safety backup file was found.")
-        except PermissionError as e:
-            QMessageBox.warning(self, "Permission Required", str(e))
 
     def _on_flush_dns(self):
         self.hosts_mgr.flush_dns_cache()

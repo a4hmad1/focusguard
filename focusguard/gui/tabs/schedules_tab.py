@@ -35,15 +35,9 @@ class SchedulesTab(QWidget):
         # Create New Schedule Card
         sched_card = QFrame()
         sched_card.setObjectName("sched_card")
-        sched_card.setStyleSheet("""
-            QFrame#sched_card {
-                background-color: #1e293b;
-                border: 1px solid #334155;
-                border-radius: 12px;
-                padding: 16px;
-            }
-        """)
+        sched_card.setProperty("class", "card")
         card_layout = QVBoxLayout(sched_card)
+        card_layout.setContentsMargins(14, 12, 14, 12)
         card_layout.setSpacing(12)
 
         card_title = QLabel("Create New Recurring Schedule")

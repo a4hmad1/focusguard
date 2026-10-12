@@ -1,8 +1,8 @@
-"""Modern Focus Timer and Countdown Widget."""
+"""Formal Focus Timer and Countdown Widget."""
 
 from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QProgressBar, QComboBox, QLineEdit
+    QPushButton, QProgressBar, QLineEdit
 )
 from PySide6.QtCore import Qt, Signal
 from datetime import timedelta
@@ -15,31 +15,25 @@ class TimerWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.setObjectName("timer_widget")
-        self.setStyleSheet("""
-            QFrame#timer_widget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1e293b, stop:1 #0f172a);
-                border: 1px solid #334155;
-                border-radius: 16px;
-                padding: 24px;
-            }
-        """)
+        self.setProperty("class", "card")
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(14)
 
         # Header Badge
-        self.status_badge = QLabel("READY TO FOCUS")
+        self.status_badge = QLabel("STRICT WHITELIST READY • ALL OTHER WEBSITES BLOCKED")
         self.status_badge.setAlignment(Qt.AlignCenter)
         self.status_badge.setStyleSheet("""
-            background-color: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 9999px;
-            padding: 4px 16px;
+            background-color: rgba(37, 99, 235, 0.12);
+            color: #2563eb;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 4px;
+            padding: 4px 12px;
             font-size: 11px;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         """)
         layout.addWidget(self.status_badge, alignment=Qt.AlignCenter)
 
@@ -47,44 +41,32 @@ class TimerWidget(QFrame):
         self.digits_label = QLabel("25:00")
         self.digits_label.setAlignment(Qt.AlignCenter)
         self.digits_label.setStyleSheet("""
-            font-size: 64px;
+            font-size: 54px;
             font-weight: 800;
-            color: #f8fafc;
-            letter-spacing: -2px;
+            letter-spacing: -1.5px;
             font-family: monospace, monospace;
         """)
         layout.addWidget(self.digits_label, alignment=Qt.AlignCenter)
 
         # Subtitle
-        self.subtitle_label = QLabel("Select duration or use quick presets to begin your session.")
+        self.subtitle_label = QLabel("All browser URLs will be blocked except saved URLs in your whitelist.")
         self.subtitle_label.setAlignment(Qt.AlignCenter)
-        self.subtitle_label.setStyleSheet("color: #94a3b8; font-size: 13px;")
+        self.subtitle_label.setProperty("class", "subtext")
         layout.addWidget(self.subtitle_label, alignment=Qt.AlignCenter)
 
         # Progress Bar
         self.progress_bar = QProgressBar()
-        self.progress_bar.setFixedHeight(8)
+        self.progress_bar.setFixedHeight(6)
         self.progress_bar.setTextVisible(False)
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(100)
-        self.progress_bar.setStyleSheet("""
-            QProgressBar {
-                background-color: #0f172a;
-                border-radius: 4px;
-                border: 1px solid #334155;
-            }
-            QProgressBar::chunk {
-                background-color: #3b82f6;
-                border-radius: 4px;
-            }
-        """)
         layout.addWidget(self.progress_bar)
 
-        # Preset Buttons Row
+        # Presets Row
         self.presets_row = QHBoxLayout()
         self.presets_row.setSpacing(8)
 
-        presets = [("15m", "15m"), ("25m (Pomodoro)", "25m"), ("45m", "45m"), ("1h", "1h"), ("2h", "2h")]
+        presets = [("25m Study", "25m"), ("45m Lecture", "45m"), ("60m Deep Work", "1h"), ("90m Session", "90m"), ("2h Exam", "2h")]
         self.preset_buttons = []
         for label, val in presets:
             btn = QPushButton(label)
@@ -99,25 +81,11 @@ class TimerWidget(QFrame):
         self.action_row.setSpacing(10)
 
         self.custom_input = QLineEdit()
-        self.custom_input.setPlaceholderText("Custom (e.g. 1h 30m)")
-        self.custom_input.setFixedWidth(160)
+        self.custom_input.setPlaceholderText("Custom time (e.g. 1h 30m)")
+        self.custom_input.setFixedWidth(170)
         self.action_row.addWidget(self.custom_input)
 
-        self.start_btn = QPushButton("Start Focus Session")
-        self.start_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2563eb;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 24px;
-                color: white;
-                font-weight: 700;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #1d4ed8;
-            }
-        """)
+        self.start_btn = QPushButton("Start Focus Shield")
         self.start_btn.clicked.connect(self._on_action_button_clicked)
         self.action_row.addWidget(self.start_btn)
 
@@ -135,78 +103,50 @@ class TimerWidget(QFrame):
 
     def _on_action_button_clicked(self):
         if not self._is_active:
-            # Start
             val = self.custom_input.text().strip() or "25m"
             td = parse_duration(val)
             if not td:
                 td = timedelta(minutes=25)
             self._total_duration_secs = int(td.total_seconds())
-            self.session_start_requested.emit(td, f"GUI Session ({val})")
+            self.session_start_requested.emit(td, f"Focus Shield ({val})")
         else:
-            # Stop
             self.session_stop_requested.emit()
 
     def update_countdown(self, remaining_seconds: float, is_active: bool):
         self._is_active = is_active
         if is_active and remaining_seconds > 0:
             self.digits_label.setText(format_time_remaining(remaining_seconds))
-            self.status_badge.setText("FOCUS SESSION IN PROGRESS")
+            self.status_badge.setText("● FOCUS SHIELD ACTIVE • ONLY APPROVED SITES OPEN")
             self.status_badge.setStyleSheet("""
                 background-color: rgba(34, 197, 94, 0.15);
-                color: #4ade80;
-                border: 1px solid rgba(34, 197, 94, 0.3);
-                border-radius: 9999px;
-                padding: 4px 16px;
+                color: #16a34a;
+                border: 1px solid rgba(34, 197, 94, 0.4);
+                border-radius: 4px;
+                padding: 4px 12px;
                 font-size: 11px;
                 font-weight: 700;
-                letter-spacing: 1px;
             """)
-            self.start_btn.setText("Stop Focus Session")
-            self.start_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #dc2626;
-                    border: none;
-                    border-radius: 8px;
-                    padding: 10px 24px;
-                    color: white;
-                    font-weight: 700;
-                    font-size: 14px;
-                }
-                QPushButton:hover {
-                    background-color: #b91c1c;
-                }
-            """)
-            self.subtitle_label.setText("Distracting apps & websites are locked to protect your focus.")
+            self.start_btn.setText("Stop Focus Shield")
+            self.start_btn.setProperty("class", "danger")
+            self.start_btn.setStyleSheet("background-color: #dc2626; border-color: #b91c1c; color: white;")
+            self.subtitle_label.setText("Browsers are locked to approved URLs only. All other sites are blocked.")
             pct = int((remaining_seconds / max(1, self._total_duration_secs)) * 100)
             self.progress_bar.setValue(min(100, max(0, pct)))
         else:
-            self.status_badge.setText("READY TO FOCUS")
+            self.status_badge.setText("STRICT WHITELIST READY • ALL OTHER WEBSITES BLOCKED")
             self.status_badge.setStyleSheet("""
-                background-color: rgba(59, 130, 246, 0.15);
-                color: #60a5fa;
-                border: 1px solid rgba(59, 130, 246, 0.3);
-                border-radius: 9999px;
-                padding: 4px 16px;
+                background-color: rgba(37, 99, 235, 0.12);
+                color: #2563eb;
+                border: 1px solid rgba(37, 99, 235, 0.3);
+                border-radius: 4px;
+                padding: 4px 12px;
                 font-size: 11px;
                 font-weight: 700;
-                letter-spacing: 1px;
             """)
-            self.start_btn.setText("Start Focus Session")
-            self.start_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #2563eb;
-                    border: none;
-                    border-radius: 8px;
-                    padding: 10px 24px;
-                    color: white;
-                    font-weight: 700;
-                    font-size: 14px;
-                }
-                QPushButton:hover {
-                    background-color: #1d4ed8;
-                }
-            """)
-            self.subtitle_label.setText("Select duration or use quick presets to begin your session.")
+            self.start_btn.setText("Start Focus Shield")
+            self.start_btn.setProperty("class", "")
+            self.start_btn.setStyleSheet("")
+            self.subtitle_label.setText("All browser URLs will be blocked except saved URLs in your whitelist.")
             self.progress_bar.setValue(100)
             if not is_active:
                 self.digits_label.setText("25:00")

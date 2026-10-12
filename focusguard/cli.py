@@ -38,7 +38,10 @@ def cmd_status(args, db: Database, scheduler: Scheduler):
 
     status_str = format_status_badge("ACTIVE", "1;32") if active else format_status_badge("IDLE", "1;33")
     print(f"\nFocus Guard State : {status_str}")
-    print(f"Blocking Mode     : \033[1m{mode}\033[0m (Whitelist = only approved sites; Blacklist = blocks restricted sites)")
+    if mode == "WHITELIST":
+        print(f"Policy Mode       : \033[1;32mSTRICT WHITELIST\033[0m (ALL browser URLs blocked EXCEPT saved approved list)")
+    else:
+        print(f"Policy Mode       : \033[1mBLACKLIST\033[0m (Blocks specific restricted sites)")
     print(f"Admin Privileges  : {'Yes (root/admin)' if is_admin() else 'No (Standard User)'}")
 
     if status["has_timed_session"]:
@@ -122,6 +125,23 @@ def cmd_unblock_site(args, db: Database, blocker: WebsiteBlocker):
             pass
     else:
         print(f"\033[1;33mWarning:\033[0m No rule found for '{target}'.")
+
+def cmd_check_site(args, blocker: WebsiteBlocker):
+    """Check whether a website is allowed or blocked."""
+    raw = args.url
+    domain = WebsiteRule.extract_domain(raw)
+    allowed = blocker.is_url_allowed(raw)
+    mode = blocker.get_mode().upper()
+
+    print_banner()
+    print(f"\nTarget URL     : \033[1m{raw}\033[0m")
+    print(f"Clean Domain   : \033[1m{domain}\033[0m")
+    print(f"Policy Mode    : \033[1m{mode}\033[0m")
+    if allowed:
+        print(f"Access Status  : \033[1;32mALLOWED (Open in Browsers)\033[0m")
+    else:
+        print(f"Access Status  : \033[1;31mBLOCKED (Restricted by FocusGuard)\033[0m")
+    print()
 
 def cmd_list_sites(args, db: Database):
     """List configured website rules."""
@@ -277,6 +297,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_list_sites = subparsers.add_parser("list-sites", help="List configured website rules")
     p_list_sites.add_argument("--type", choices=["all", "whitelist", "blacklist"], default="all")
 
+    # check-site
+    p_check_site = subparsers.add_parser("check-site", help="Check whether a URL is permitted or blocked")
+    p_check_site.add_argument("url", help="Website URL to test (e.g. google.com or wikipedia.org)")
+
     # list-apps
     subparsers.add_parser("list-apps", help="List installed desktop applications and processes")
 
@@ -331,6 +355,8 @@ def main(args: Optional[List[str]] = None) -> int:
         cmd_unblock_site(parsed_args, db, website_blocker)
     elif parsed_args.command == "list-sites":
         cmd_list_sites(parsed_args, db)
+    elif parsed_args.command == "check-site":
+        cmd_check_site(parsed_args, website_blocker)
     elif parsed_args.command == "list-apps":
         cmd_list_apps(parsed_args, db, detector)
     elif parsed_args.command == "block-app":

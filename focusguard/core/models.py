@@ -74,8 +74,8 @@ class ActiveSession:
 
 @dataclass
 class AppSettings:
-    mode: str = "blacklist"           # "blacklist" or "whitelist"
+    mode: str = "whitelist"           # "whitelist" (default) or "blacklist"
     auto_start_on_boot: bool = False
     emergency_pin: str = "0000"
     block_port: int = 8880
-    theme: str = "dark"
+    theme: str = "black"              # "black" or "white"

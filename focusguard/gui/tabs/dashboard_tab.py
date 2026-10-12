@@ -1,10 +1,10 @@
-"""Dashboard Overview Tab for FocusGuard GUI."""
+"""Formal Dashboard Overview Tab for FocusGuard GUI."""
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QScrollArea, QFrame, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
+    QFrame, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from datetime import timedelta
 from focusguard.core.database import Database
 from focusguard.engine.scheduler import Scheduler
@@ -20,17 +20,17 @@ class DashboardTab(QWidget):
         self.detector = AppDetector()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(16)
 
         # Header Title
         header_layout = QHBoxLayout()
         title_box = QVBoxLayout()
-        title_box.setSpacing(4)
+        title_box.setSpacing(2)
         
         self.title_label = QLabel("Focus Dashboard")
         self.title_label.setProperty("class", "heading_large")
-        self.subtitle_label = QLabel("Eliminate distractions and maintain deep concentration.")
+        self.subtitle_label = QLabel("Enforcing strict URL whitelisting and application restrictions.")
         self.subtitle_label.setProperty("class", "subtext")
         
         title_box.addWidget(self.title_label)
@@ -42,12 +42,12 @@ class DashboardTab(QWidget):
 
         # Stat Cards Row
         self.stats_row = QHBoxLayout()
-        self.stats_row.setSpacing(16)
+        self.stats_row.setSpacing(12)
 
-        self.card_sites = StatCard("Blocked Websites", "0", "Configured rules", "#ef4444")
-        self.card_apps = StatCard("Blocked Apps", "0", "Applications restricted", "#f59e0b")
-        self.card_running = StatCard("Running Processes", "0", "Active on system", "#10b981")
-        self.card_mode = StatCard("Filter Mode", "BLACKLIST", "Current enforcement", "#3b82f6")
+        self.card_sites = StatCard("Approved Whitelist", "0", "Only these URLs open", "#16a34a")
+        self.card_apps = StatCard("Blocked Apps", "0", "Restricted applications", "#dc2626")
+        self.card_running = StatCard("Active Processes", "0", "Monitored on system", "#2563eb")
+        self.card_mode = StatCard("Enforcement Mode", "WHITELIST", "Default-deny policy", "#0891b2")
 
         self.stats_row.addWidget(self.card_sites)
         self.stats_row.addWidget(self.card_apps)
@@ -64,18 +64,11 @@ class DashboardTab(QWidget):
         # Active Sessions Summary Table
         sessions_frame = QFrame()
         sessions_frame.setObjectName("sessions_frame")
-        sessions_frame.setStyleSheet("""
-            QFrame#sessions_frame {
-                background-color: #1e293b;
-                border: 1px solid #334155;
-                border-radius: 12px;
-                padding: 16px;
-            }
-        """)
+        sessions_frame.setProperty("class", "card")
         sessions_layout = QVBoxLayout(sessions_frame)
-        sessions_layout.setContentsMargins(12, 12, 12, 12)
+        sessions_layout.setContentsMargins(12, 10, 12, 10)
 
-        sec_title = QLabel("Active Focus Restrictions")
+        sec_title = QLabel("Active Focus Restrictions & Timers")
         sec_title.setProperty("class", "heading_medium")
         sessions_layout.addWidget(sec_title)
 
@@ -110,12 +103,12 @@ class DashboardTab(QWidget):
         )
 
         # Update Stat Cards
-        sites_count = len(self.db.get_website_rules(rule_type="blacklist", only_active=True))
+        whitelisted_count = len(self.db.get_website_rules(rule_type="whitelist", only_active=True))
         apps_count = len(self.db.get_app_rules(only_blocked=True))
         running_count = len(self.detector.get_running_processes())
         mode_str = status["mode"].upper()
 
-        self.card_sites.set_value(str(sites_count))
+        self.card_sites.set_value(str(whitelisted_count))
         self.card_apps.set_value(str(apps_count))
         self.card_running.set_value(str(running_count))
         self.card_mode.set_value(mode_str)
@@ -125,6 +118,6 @@ class DashboardTab(QWidget):
         self.sessions_table.setRowCount(len(active_sessions))
         for row, s in enumerate(active_sessions):
             self.sessions_table.setItem(row, 0, QTableWidgetItem(str(s.get("target", "All"))))
-            self.sessions_table.setItem(row, 1, QTableWidgetItem(str(s.get("session_type", "Focus Mode"))))
-            self.sessions_table.setItem(row, 2, QTableWidgetItem(str(s.get("end_time", ""))))
+            self.sessions_table.setItem(row, 1, QTableWidgetItem(str(s.get("session_type", "Focus Shield"))))
+            self.sessions_table.setItem(row, 2, QTableWidgetItem(str(s.get("end_time", ""))[:19]))
             self.sessions_table.setItem(row, 3, QTableWidgetItem(str(s.get("reason", ""))))
