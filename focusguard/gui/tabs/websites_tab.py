@@ -6,12 +6,14 @@ from PySide6.QtWidgets import (
     QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
     QComboBox, QMessageBox, QFrame
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from typing import Optional
 from focusguard.core.database import Database
 from focusguard.core.models import WebsiteRule
 from focusguard.engine.website_blocker import WebsiteBlocker
 from focusguard.engine.scheduler import Scheduler
+from focusguard.gui.icons import get_web_icon
+from focusguard.gui.widgets.badge import make_badge
 
 class WebsitesTab(QWidget):
     def __init__(self, db: Database, website_blocker: WebsiteBlocker, scheduler: Optional[Scheduler] = None):
@@ -50,54 +52,6 @@ class WebsitesTab(QWidget):
             font-weight: 700;
         """)
         header_row.addWidget(self.mode_badge)
-
-        # Dedicated Start & Stop Shield Buttons
-        self.start_shield_btn = QPushButton("▶  Start Focus")
-        self.start_shield_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #16a34a;
-                color: #ffffff;
-                border: 1px solid #15803d;
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-weight: 700;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #22c55e;
-            }
-            QPushButton:disabled {
-                background-color: rgba(22, 163, 74, 0.25);
-                color: rgba(255, 255, 255, 0.35);
-                border-color: transparent;
-            }
-        """)
-        self.start_shield_btn.clicked.connect(self._on_start_focus)
-        header_row.addWidget(self.start_shield_btn)
-
-        self.stop_shield_btn = QPushButton("⏹  Stop Focus")
-        self.stop_shield_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #dc2626;
-                color: #ffffff;
-                border: 1px solid #b91c1c;
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-weight: 700;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #ef4444;
-            }
-            QPushButton:disabled {
-                background-color: rgba(220, 38, 38, 0.2);
-                color: rgba(255, 255, 255, 0.35);
-                border-color: transparent;
-            }
-        """)
-        self.stop_shield_btn.clicked.connect(self._on_stop_focus)
-        header_row.addWidget(self.stop_shield_btn)
-
         layout.addLayout(header_row)
 
         # Unified Action Panel (Add Website & Study Pack)
@@ -163,13 +117,19 @@ class WebsitesTab(QWidget):
         # Table of Approved Websites (3 Clean Columns)
         self.table = QTableWidget(0, 3)
         self.table.setHorizontalHeaderLabels(["Approved Website Domain", "Category", "Actions"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.table.setIconSize(QSize(20, 20))
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(40)
+        self.table.verticalHeader().setDefaultSectionSize(46)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setShowGrid(False)
+
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
+        self.table.setColumnWidth(1, 140)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Fixed)
+        self.table.setColumnWidth(2, 170)
         layout.addWidget(self.table)
 
         self.load_rules()
@@ -227,8 +187,7 @@ class WebsitesTab(QWidget):
             self.update_status(False)
 
     def update_status(self, is_active: bool):
-        self.start_shield_btn.setEnabled(not is_active)
-        self.stop_shield_btn.setEnabled(is_active)
+        pass
 
     def _check_test_url(self):
         raw = self.test_input.text().strip()
@@ -301,31 +260,34 @@ class WebsitesTab(QWidget):
         ]
 
         self.table.setRowCount(len(filtered))
+        web_icon = get_web_icon()
         for row, r in enumerate(filtered):
-            # Domain
-            dom_item = QTableWidgetItem(f"🌐   {r.domain}")
+            # Domain with native web icon
+            dom_item = QTableWidgetItem(r.domain)
+            dom_item.setIcon(web_icon)
             dom_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            dom_item.setToolTip(f"Whitelisted Domain: {r.domain}\nSaved URL: {r.url or r.domain}")
             self.table.setItem(row, 0, dom_item)
 
-            # Category
-            cat_item = QTableWidgetItem(f"📚  {r.category}")
-            cat_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
-            self.table.setItem(row, 1, cat_item)
+            # Category pill badge
+            cat_text = r.category.capitalize() if r.category else "General"
+            self.table.setCellWidget(row, 1, make_badge(cat_text, "category"))
 
             # Actions cell (Open in Browser & Remove)
             actions_widget = QWidget()
             act_layout = QHBoxLayout(actions_widget)
-            act_layout.setContentsMargins(4, 4, 4, 4)
+            act_layout.setContentsMargins(6, 2, 6, 2)
             act_layout.setSpacing(6)
+            act_layout.setAlignment(Qt.AlignCenter)
 
-            open_btn = QPushButton("Open in Browser")
+            open_btn = QPushButton("Open")
             open_btn.setProperty("class", "secondary")
             open_btn.setFixedHeight(28)
             full_url = r.url if "://" in r.url else f"https://{r.domain}"
             open_btn.clicked.connect(lambda _, u=full_url: webbrowser.open(u))
             act_layout.addWidget(open_btn)
 
-            del_btn = QPushButton("✕ Remove")
+            del_btn = QPushButton("Remove")
             del_btn.setProperty("class", "danger")
             del_btn.setFixedHeight(28)
             del_btn.clicked.connect(lambda _, d=r.domain: self._delete_rule(d))

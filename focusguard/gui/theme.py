@@ -241,33 +241,83 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 }
 
 /* Badges */
-QLabel.badge_active {
+QLabel.badge_active, QLabel[badge="active"] {
     background-color: rgba(46, 160, 67, 0.15);
     color: #3fb950;
     border: 1px solid rgba(46, 160, 67, 0.4);
-    border-radius: 4px;
-    padding: 2px 8px;
+    border-radius: 12px;
+    padding: 3px 12px;
     font-weight: 600;
     font-size: 11px;
 }
 
-QLabel.badge_blocked {
-    background-color: rgba(248, 81, 73, 0.15);
-    color: #f85149;
-    border: 1px solid rgba(248, 81, 73, 0.4);
-    border-radius: 4px;
-    padding: 2px 8px;
+QLabel[badge="running"] {
+    background-color: rgba(46, 160, 67, 0.18);
+    color: #3fb950;
+    border: 1px solid rgba(46, 160, 67, 0.4);
+    border-radius: 12px;
+    padding: 3px 12px;
     font-weight: 600;
     font-size: 11px;
 }
 
-QLabel.badge_muted {
+QLabel[badge="idle"] {
     background-color: #21262d;
     color: #8b949e;
     border: 1px solid #30363d;
-    border-radius: 4px;
-    padding: 2px 8px;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 500;
+    font-size: 11px;
+}
+
+QLabel[badge="protected"] {
+    background-color: rgba(56, 139, 253, 0.15);
+    color: #58a6ff;
+    border: 1px solid rgba(56, 139, 253, 0.35);
+    border-radius: 12px;
+    padding: 3px 12px;
     font-weight: 600;
+    font-size: 11px;
+}
+
+QLabel.badge_blocked, QLabel[badge="blocked"] {
+    background-color: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+    border: 1px solid rgba(248, 81, 73, 0.4);
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+QLabel[badge="allowed"] {
+    background-color: rgba(46, 160, 67, 0.12);
+    color: #3fb950;
+    border: 1px solid rgba(46, 160, 67, 0.3);
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+QLabel[badge="category"] {
+    background-color: #1f2937;
+    color: #79c0ff;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 500;
+    font-size: 11px;
+}
+
+QLabel.badge_muted, QLabel[badge="muted"] {
+    background-color: #21262d;
+    color: #8b949e;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 500;
     font-size: 11px;
 }
 """
@@ -509,33 +559,83 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 }
 
 /* Badges */
-QLabel.badge_active {
+QLabel.badge_active, QLabel[badge="active"] {
     background-color: #dafbe1;
     color: #1a7f37;
     border: 1px solid #4ac26b;
-    border-radius: 4px;
-    padding: 2px 8px;
+    border-radius: 12px;
+    padding: 3px 12px;
     font-weight: 600;
     font-size: 11px;
 }
 
-QLabel.badge_blocked {
+QLabel[badge="running"] {
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+QLabel[badge="idle"] {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 500;
+    font-size: 11px;
+}
+
+QLabel[badge="protected"] {
+    background-color: #e0f2fe;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+QLabel.badge_blocked, QLabel[badge="blocked"] {
     background-color: #ffebe9;
     color: #cf222e;
     border: 1px solid #ff8182;
-    border-radius: 4px;
-    padding: 2px 8px;
+    border-radius: 12px;
+    padding: 3px 12px;
     font-weight: 600;
     font-size: 11px;
 }
 
-QLabel.badge_muted {
+QLabel[badge="allowed"] {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+QLabel[badge="category"] {
+    background-color: #eff6ff;
+    color: #0969da;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 500;
+    font-size: 11px;
+}
+
+QLabel.badge_muted, QLabel[badge="muted"] {
     background-color: #f6f8fa;
     color: #656d76;
     border: 1px solid #d0d7de;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-weight: 600;
+    border-radius: 12px;
+    padding: 3px 12px;
+    font-weight: 500;
     font-size: 11px;
 }
 """

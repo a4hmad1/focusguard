@@ -52,7 +52,7 @@ class DashboardTab(QWidget):
         sc_layout.setContentsMargins(16, 14, 16, 14)
         sc_layout.setSpacing(8)
 
-        sc_title = QLabel("🌐   Allowed Websites")
+        sc_title = QLabel("Approved Websites")
         sc_title.setStyleSheet("font-size: 14px; font-weight: 700;")
         self.sc_count_lbl = QLabel("0 Approved Sites")
         self.sc_count_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #16a34a;")
@@ -78,7 +78,7 @@ class DashboardTab(QWidget):
         ac_layout.setContentsMargins(16, 14, 16, 14)
         ac_layout.setSpacing(8)
 
-        ac_title = QLabel("💻   Distracting Apps")
+        ac_title = QLabel("Restricted Applications")
         ac_title.setStyleSheet("font-size: 14px; font-weight: 700;")
         self.ac_count_lbl = QLabel("0 Blocked Apps")
         self.ac_count_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #dc2626;")
@@ -106,7 +106,7 @@ class DashboardTab(QWidget):
         g_layout.setContentsMargins(16, 12, 16, 12)
         g_layout.setSpacing(6)
 
-        g_title = QLabel("💡   How FocusGuard Works")
+        g_title = QLabel("How FocusGuard Works")
         g_title.setStyleSheet("font-size: 13px; font-weight: 700;")
         
         g_text = QLabel(

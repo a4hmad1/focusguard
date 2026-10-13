@@ -58,7 +58,7 @@ class SettingsTab(QWidget):
         layout.addWidget(theme_card)
 
         # Section 2: How Website Blocking Works
-        pac_card, pac_layout = self._create_card("🌐   How Website Blocking Works")
+        pac_card, pac_layout = self._create_card("How Website Blocking Works")
         
         p_info = QLabel(
             "FocusGuard automatically configures your web browsers (Chrome, Firefox, Edge, Brave) "
@@ -79,7 +79,7 @@ class SettingsTab(QWidget):
         layout.addWidget(pac_card)
 
         # Section 3: Emergency Recovery
-        rec_card, rec_layout = self._create_card("🚨   Emergency Unlock")
+        rec_card, rec_layout = self._create_card("Emergency Unlock")
 
         rec_desc = QLabel(
             "Need to immediately stop all restrictions? "
@@ -90,7 +90,7 @@ class SettingsTab(QWidget):
         rec_layout.addWidget(rec_desc)
 
         rec_btn_row = QHBoxLayout()
-        emergency_btn = QPushButton("🚨  Trigger Emergency Unlock")
+        emergency_btn = QPushButton("Trigger Emergency Unlock")
         emergency_btn.setProperty("class", "danger")
         emergency_btn.setFixedHeight(34)
         emergency_btn.clicked.connect(self._on_emergency_unblock)

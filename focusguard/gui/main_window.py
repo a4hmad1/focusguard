@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QStackedWidget, QLabel,
     QPushButton, QFrame, QMessageBox
 )
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QSize
 from focusguard.core.config import APP_NAME, APP_VERSION
 from focusguard.core.database import Database
 from focusguard.engine.app_blocker import AppBlocker
@@ -13,6 +13,10 @@ from focusguard.engine.website_blocker import WebsiteBlocker
 from focusguard.engine.scheduler import Scheduler
 from focusguard.gui.theme import (
     FORMAL_DARK_THEME_QSS, FORMAL_LIGHT_THEME_QSS, get_theme_stylesheet
+)
+from focusguard.gui.icons import (
+    get_shield_icon, get_web_icon, get_apps_icon,
+    get_calendar_icon, get_settings_icon
 )
 from focusguard.gui.tabs import (
     DashboardTab, WebsitesTab, AppsTab,
@@ -93,22 +97,24 @@ class MainWindow(QMainWindow):
     def _create_sidebar(self) -> QFrame:
         sidebar = QFrame()
         sidebar.setObjectName("sidebar")
-        sidebar.setFixedWidth(210)
+        sidebar.setFixedWidth(230)
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(12, 18, 12, 18)
         layout.setSpacing(10)
 
         # Brand / Logo Header
         brand_box = QHBoxLayout()
-        brand_box.setSpacing(8)
+        brand_box.setSpacing(10)
         
-        logo_icon = QLabel("🛡️")
-        logo_icon.setStyleSheet("font-size: 22px;")
+        logo_icon = QLabel()
+        logo_icon.setPixmap(get_shield_icon().pixmap(26, 26))
+        logo_icon.setFixedSize(28, 28)
+        logo_icon.setAlignment(Qt.AlignCenter)
         
         brand_text_box = QVBoxLayout()
-        brand_text_box.setSpacing(0)
+        brand_text_box.setSpacing(1)
         brand_title = QLabel(APP_NAME)
-        brand_title.setStyleSheet("font-size: 16px; font-weight: 800; letter-spacing: -0.3px;")
+        brand_title.setStyleSheet("font-size: 15px; font-weight: 800; letter-spacing: -0.3px;")
         brand_sub = QLabel("Study Shield")
         brand_sub.setStyleSheet("font-size: 11px; font-weight: 500; color: #8b949e;")
         brand_text_box.addWidget(brand_title)
@@ -119,19 +125,24 @@ class MainWindow(QMainWindow):
         layout.addLayout(brand_box)
         layout.addSpacing(10)
 
-        # Nav Items List
+        # Nav Items List with native icons
         self.nav_list = QListWidget()
         self.nav_list.setObjectName("nav_list")
+        self.nav_list.setIconSize(QSize(18, 18))
+        self.nav_list.setFrameShape(QFrame.NoFrame)
+        self.nav_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.nav_list.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.nav_list.setFixedHeight(235)
         
         items = [
-            ("⚡  Focus Shield", 0),
-            ("🌐  Allowed Websites", 1),
-            ("💻  Blocked Apps", 2),
-            ("📅  Study Schedules", 3),
-            ("⚙️  Settings & Help", 4),
+            ("Focus Shield", get_shield_icon(), 0),
+            ("Allowed Websites", get_web_icon(), 1),
+            ("Blocked Apps", get_apps_icon(), 2),
+            ("Study Schedules", get_calendar_icon(), 3),
+            ("Settings & Help", get_settings_icon(), 4),
         ]
-        for text, idx in items:
-            it = QListWidgetItem(text)
+        for text, icon, idx in items:
+            it = QListWidgetItem(icon, f"  {text}")
             self.nav_list.addItem(it)
 
         self.nav_list.currentRowChanged.connect(self._on_nav_change)
@@ -223,7 +234,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.status_pill)
 
         # Emergency Unlock Header Button
-        em_btn = QPushButton("⚠️ Emergency Unlock")
+        em_btn = QPushButton("Emergency Unlock")
         em_btn.setFixedHeight(28)
         em_btn.setStyleSheet("""
             QPushButton {

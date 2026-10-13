@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
     QComboBox, QMessageBox, QInputDialog
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from focusguard.core.database import Database
 from focusguard.core.models import AppRule
 from focusguard.core.safety import is_critical_process
@@ -13,6 +13,8 @@ from focusguard.core.duration import parse_duration
 from focusguard.engine.app_detector import AppDetector
 from focusguard.engine.app_blocker import AppBlocker
 from focusguard.engine.scheduler import Scheduler
+from focusguard.gui.icons import get_app_icon
+from focusguard.gui.widgets.badge import make_badge
 
 class AppsTab(QWidget):
     def __init__(self, db: Database, scheduler: Scheduler):
@@ -39,55 +41,9 @@ class AppsTab(QWidget):
         header_row.addLayout(title_box)
         header_row.addStretch()
 
-        # Dedicated Start & Stop Shield Buttons
-        self.start_shield_btn = QPushButton("▶  Start Focus")
-        self.start_shield_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #16a34a;
-                color: #ffffff;
-                border: 1px solid #15803d;
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-weight: 700;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #22c55e;
-            }
-            QPushButton:disabled {
-                background-color: rgba(22, 163, 74, 0.25);
-                color: rgba(255, 255, 255, 0.35);
-                border-color: transparent;
-            }
-        """)
-        self.start_shield_btn.clicked.connect(self._on_start_focus)
-        header_row.addWidget(self.start_shield_btn)
-
-        self.stop_shield_btn = QPushButton("⏹  Stop Focus")
-        self.stop_shield_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #dc2626;
-                color: #ffffff;
-                border: 1px solid #b91c1c;
-                border-radius: 6px;
-                padding: 5px 16px;
-                font-weight: 700;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #ef4444;
-            }
-            QPushButton:disabled {
-                background-color: rgba(220, 38, 38, 0.2);
-                color: rgba(255, 255, 255, 0.35);
-                border-color: transparent;
-            }
-        """)
-        self.stop_shield_btn.clicked.connect(self._on_stop_focus)
-        header_row.addWidget(self.stop_shield_btn)
-
         refresh_btn = QPushButton("Refresh List")
         refresh_btn.setProperty("class", "secondary")
+        refresh_btn.setFixedHeight(30)
         refresh_btn.clicked.connect(self.load_applications)
         header_row.addWidget(refresh_btn)
         layout.addLayout(header_row)
@@ -106,17 +62,25 @@ class AppsTab(QWidget):
 
         layout.addLayout(filter_row)
 
-        # Apps Table (4 Clean Columns)
+        # Apps Table (4 Clean Columns with Native Icons)
         self.table = QTableWidget(0, 4)
         self.table.setHorizontalHeaderLabels(["Application Name", "Status", "Study Restriction", "Action"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        self.table.setIconSize(QSize(24, 24))
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(40)
+        self.table.verticalHeader().setDefaultSectionSize(46)
         self.table.setShowGrid(False)
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setSelectionMode(QTableWidget.SingleSelection)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
+        self.table.setColumnWidth(1, 120)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Fixed)
+        self.table.setColumnWidth(2, 135)
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.Fixed)
+        self.table.setColumnWidth(3, 130)
+
         layout.addWidget(self.table)
 
         self.load_applications()
@@ -161,51 +125,47 @@ class AppsTab(QWidget):
             is_blk = item["is_blocked"]
             is_crit = item["is_critical"]
 
-            # Application Name & Executable
-            app_label = f"💻   {app.name}"
+            # Application Name & Native Freedesktop/System Icon
+            icon = get_app_icon(app.icon, app.exec_name)
+            name_text = app.name
             if app.exec_name.lower() != app.name.lower():
-                app_label += f" ({app.exec_name})"
-            name_item = QTableWidgetItem(app_label)
+                name_text = f"{app.name}  ·  {app.exec_name}"
+            name_item = QTableWidgetItem(name_text)
+            name_item.setIcon(icon)
             name_item.setTextAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            name_item.setToolTip(f"Application: {app.name}\nProcess: {app.exec_name}\nCategory: {app.category}")
             self.table.setItem(i, 0, name_item)
 
             # Running state badge
-            run_str = "●  Running" if is_run else "○  Closed"
-            run_item = QTableWidgetItem(run_str)
-            run_item.setTextAlignment(Qt.AlignCenter)
             if is_run:
-                run_item.setForeground(Qt.GlobalColor.green)
+                self.table.setCellWidget(i, 1, make_badge("●  Running", "running"))
             else:
-                run_item.setForeground(Qt.GlobalColor.gray)
-            self.table.setItem(i, 1, run_item)
+                self.table.setCellWidget(i, 1, make_badge("○  Closed", "idle"))
 
             # Restriction badge
             if is_crit:
-                restr_item = QTableWidgetItem("🛡️  Protected OS")
-                restr_item.setForeground(Qt.GlobalColor.cyan)
+                self.table.setCellWidget(i, 2, make_badge("🛡  Protected", "protected"))
             elif is_blk:
-                restr_item = QTableWidgetItem("⛔  Blocked")
-                restr_item.setForeground(Qt.GlobalColor.red)
+                self.table.setCellWidget(i, 2, make_badge("✕  Blocked", "blocked"))
             else:
-                restr_item = QTableWidgetItem("🟢  Allowed")
-                restr_item.setForeground(Qt.GlobalColor.green)
-            restr_item.setTextAlignment(Qt.AlignCenter)
-            self.table.setItem(i, 2, restr_item)
+                self.table.setCellWidget(i, 2, make_badge("✓  Allowed", "allowed"))
 
             # Action button
             actions_widget = QWidget()
             act_layout = QHBoxLayout(actions_widget)
-            act_layout.setContentsMargins(4, 2, 4, 2)
-            act_layout.setSpacing(6)
+            act_layout.setContentsMargins(6, 2, 6, 2)
+            act_layout.setAlignment(Qt.AlignCenter)
 
             if is_crit:
                 lbl = QLabel("System Safe")
-                lbl.setStyleSheet("color: #38bdf8; font-size: 11px; font-weight: 600;")
+                lbl.setStyleSheet("color: #6e7681; font-size: 11px; font-weight: 600;")
+                lbl.setAlignment(Qt.AlignCenter)
                 act_layout.addWidget(lbl)
             else:
                 toggle_btn = QPushButton("Allow App" if is_blk else "Block App")
                 toggle_btn.setProperty("class", "secondary" if is_blk else "danger")
                 toggle_btn.setFixedHeight(28)
+                toggle_btn.setFixedWidth(100)
                 toggle_btn.clicked.connect(lambda _, a=app, b=is_blk: self._toggle_app_block(a, not b))
                 act_layout.addWidget(toggle_btn)
 
@@ -257,5 +217,4 @@ class AppsTab(QWidget):
             self.update_status(False)
 
     def update_status(self, is_active: bool):
-        self.start_shield_btn.setEnabled(not is_active)
-        self.stop_shield_btn.setEnabled(is_active)
+        pass
