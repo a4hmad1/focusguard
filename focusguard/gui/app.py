@@ -11,7 +11,7 @@ def run_gui():
         app = QApplication(sys.argv)
     
     app.setApplicationName("FocusGuard")
-    app.setApplicationDisplayName("FocusGuard")
+    app.setApplicationDisplayName("")
     
     window = MainWindow()
     window.show()

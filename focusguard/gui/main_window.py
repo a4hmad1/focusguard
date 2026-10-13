@@ -22,7 +22,7 @@ from focusguard.gui.tabs import (
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION} - Study Shield")
+        self.setWindowTitle(f"FocusGuard v{APP_VERSION} · Study Shield")
         self.resize(1080, 700)
         self.setMinimumSize(900, 600)
 
@@ -75,6 +75,9 @@ class MainWindow(QMainWindow):
         content_layout.addWidget(self.stacked_pages)
         main_layout.addWidget(content_container, stretch=1)
 
+        # Set initial theme on timer widget
+        self.dashboard_tab.timer_widget.set_theme(self.current_theme in ("black", "dark"))
+
         # Connect Dashboard quick navigation
         self.dashboard_tab.navigate_to_tab.connect(self.nav_list.setCurrentRow)
 
@@ -84,6 +87,8 @@ class MainWindow(QMainWindow):
         self.timer.start(1000)
 
         self.nav_list.setCurrentRow(0)
+        self._on_nav_change(0)
+        self._on_tick()
 
     def _create_sidebar(self) -> QFrame:
         sidebar = QFrame()
@@ -149,12 +154,12 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(20, 0, 20, 0)
         layout.setSpacing(10)
 
-        self.page_title_lbl = QLabel("Dashboard")
-        self.page_title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #8b949e;")
+        self.page_title_lbl = QLabel("Focus Shield")
+        self.page_title_lbl.setStyleSheet("background: transparent; font-size: 14px; font-weight: 600; color: #8b949e;")
         layout.addWidget(self.page_title_lbl)
         layout.addStretch()
 
-        # Prominent Global Start and Stop Buttons
+        # Prominent Global Start and Stop Buttons (shown only on sub-tabs)
         self.start_shield_btn = QPushButton("▶  Start Focus")
         self.start_shield_btn.setFixedHeight(30)
         self.start_shield_btn.setStyleSheet("""
@@ -171,12 +176,13 @@ class MainWindow(QMainWindow):
                 background-color: #2ea043;
             }
             QPushButton:disabled {
-                background-color: rgba(35, 134, 54, 0.25);
-                color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(46, 160, 67, 0.2);
+                background-color: #1b4d27;
+                color: #6e7681;
+                border: 1px solid #238636;
             }
         """)
         self.start_shield_btn.clicked.connect(self._start_global_shield)
+        self.start_shield_btn.setVisible(False)
         layout.addWidget(self.start_shield_btn)
 
         self.stop_shield_btn = QPushButton("⏹  Stop Focus")
@@ -195,12 +201,13 @@ class MainWindow(QMainWindow):
                 background-color: #b62324;
             }
             QPushButton:disabled {
-                background-color: rgba(218, 54, 51, 0.25);
-                color: rgba(255, 255, 255, 0.35);
-                border: 1px solid rgba(248, 81, 73, 0.2);
+                background-color: #4c1d1d;
+                color: #6e7681;
+                border: 1px solid #da3633;
             }
         """)
         self.stop_shield_btn.clicked.connect(self._stop_global_shield)
+        self.stop_shield_btn.setVisible(False)
         layout.addWidget(self.stop_shield_btn)
 
         # Theme Switcher Button
@@ -213,21 +220,26 @@ class MainWindow(QMainWindow):
 
         # Status Pill
         self.status_pill = QLabel("○ SHIELD IDLE")
-        self.status_pill.setStyleSheet("""
-            background-color: rgba(110, 118, 129, 0.12);
-            color: #8b949e;
-            border: 1px solid rgba(110, 118, 129, 0.3);
-            border-radius: 4px;
-            padding: 3px 8px;
-            font-size: 11px;
-            font-weight: 600;
-        """)
         layout.addWidget(self.status_pill)
 
         # Emergency Unlock Header Button
-        em_btn = QPushButton("Emergency Unlock")
-        em_btn.setProperty("class", "danger")
+        em_btn = QPushButton("⚠️ Emergency Unlock")
         em_btn.setFixedHeight(28)
+        em_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #da3633;
+                border: 1px solid #da3633;
+                border-radius: 5px;
+                padding: 2px 10px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background-color: #da3633;
+                color: #ffffff;
+            }
+        """)
         em_btn.clicked.connect(self._quick_emergency_unlock)
         layout.addWidget(em_btn)
 
@@ -264,6 +276,8 @@ class MainWindow(QMainWindow):
         self.db.set_setting("theme", new_theme)
         self.setStyleSheet(get_theme_stylesheet(new_theme))
         self._update_theme_button_text()
+        self.dashboard_tab.timer_widget.set_theme(new_theme in ("black", "dark"))
+        self._on_tick()
 
     def _on_nav_change(self, row: int):
         self.stacked_pages.setCurrentIndex(row)
@@ -277,34 +291,48 @@ class MainWindow(QMainWindow):
         if 0 <= row < len(titles):
             self.page_title_lbl.setText(titles[row])
 
+        # When on the hero home dashboard (row == 0), the big Start/Stop button
+        # is right in the center card. Only show header buttons on secondary tabs (row > 0).
+        is_subtab = (row > 0)
+        self.start_shield_btn.setVisible(is_subtab)
+        self.stop_shield_btn.setVisible(is_subtab)
+
     def _on_tick(self):
         self.dashboard_tab.refresh_stats()
 
         status = self.scheduler.get_current_status()
         is_active = status["is_blocking_active"]
+        is_dark = self.current_theme in ("black", "dark")
+
         if is_active:
             self.status_pill.setText("● SHIELD ACTIVE")
-            self.status_pill.setStyleSheet("""
-                background-color: rgba(46, 160, 67, 0.15);
-                color: #3fb950;
-                border: 1px solid rgba(46, 160, 67, 0.35);
+            bg = "#163c22" if is_dark else "#dcfce7"
+            fg = "#3fb950" if is_dark else "#15803d"
+            bd = "#238636" if is_dark else "#86efac"
+            self.status_pill.setStyleSheet(f"""
+                background-color: {bg};
+                color: {fg};
+                border: 1px solid {bd};
                 border-radius: 4px;
                 padding: 3px 8px;
                 font-size: 11px;
-                font-weight: 600;
+                font-weight: 700;
             """)
             self.start_shield_btn.setEnabled(False)
             self.stop_shield_btn.setEnabled(True)
         else:
             self.status_pill.setText("○ SHIELD IDLE")
-            self.status_pill.setStyleSheet("""
-                background-color: rgba(110, 118, 129, 0.12);
-                color: #8b949e;
-                border: 1px solid rgba(110, 118, 129, 0.3);
+            bg = "#21262d" if is_dark else "#f1f5f9"
+            fg = "#8b949e" if is_dark else "#475569"
+            bd = "#30363d" if is_dark else "#cbd5e1"
+            self.status_pill.setStyleSheet(f"""
+                background-color: {bg};
+                color: {fg};
+                border: 1px solid {bd};
                 border-radius: 4px;
                 padding: 3px 8px;
                 font-size: 11px;
-                font-weight: 600;
+                font-weight: 700;
             """)
             self.start_shield_btn.setEnabled(True)
             self.stop_shield_btn.setEnabled(False)

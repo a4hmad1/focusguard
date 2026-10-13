@@ -6,11 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
-# Distribution / packaging
+# Distribution / packaging build staging
 build/
 *.egg-info/
 .installed.cfg
 *.egg
+packaging/windows/python_embed/
+packaging/windows/*.zip
 
 # Pytest & Coverage
 .pytest_cache/

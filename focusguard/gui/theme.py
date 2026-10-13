@@ -30,6 +30,10 @@ QFrame.card, QGroupBox, QFrame#sessions_frame, QFrame#add_frame, QFrame#sched_ca
     padding: 14px;
 }
 
+QFrame#timer_widget {
+    padding: 0;
+}
+
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
@@ -80,6 +84,10 @@ QFrame#header_bar {
 }
 
 /* Typography */
+QLabel {
+    background-color: transparent;
+}
+
 QLabel.heading_large {
     font-size: 18px;
     font-weight: 700;
@@ -290,6 +298,10 @@ QFrame.card, QGroupBox, QFrame#sessions_frame, QFrame#add_frame, QFrame#sched_ca
     padding: 14px;
 }
 
+QFrame#timer_widget {
+    padding: 0;
+}
+
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
@@ -340,6 +352,10 @@ QFrame#header_bar {
 }
 
 /* Typography */
+QLabel {
+    background-color: transparent;
+}
+
 QLabel.heading_large {
     font-size: 18px;
     font-weight: 700;

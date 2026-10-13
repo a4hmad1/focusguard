@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusGuard — Workstation Distraction Firewall & Study Shield</title>
+  <meta name="description" content="Open-source desktop endpoint security and website whitelist firewall for Ubuntu Linux and Windows. Enforces strict URL filtering across all browsers and blocks distracting background processes.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    /* -------------------------------------------------------------------------
+       Design System & Typography (Formal Technical Aesthetic)
+       ------------------------------------------------------------------------- */
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif;
+      --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      
+      /* Dark Theme (Obsidian Technical Palette) */
+      --bg-canvas: #090a0f;
+      --bg-surface: #10131b;
+      --bg-surface-elevated: #161b26;
+      --bg-inset: #0c0f16;
+      --border-hairline: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.14);
+      --border-accent: rgba(56, 189, 248, 0.4);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --text-inverse: #090a0f;
+      
+      --accent-emerald: #10b981;
+      --accent-emerald-subtle: rgba(16, 185, 129, 0.12);
+      --accent-emerald-border: rgba(16, 185, 129, 0.28);
+      
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      
+      --shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-elevation-2: 0 12px 32px rgba(0, 0, 0, 0.55);
+      --shadow-glow: 0 0 40px rgba(56, 189, 248, 0.08);
+    }
+
+    [data-theme="light"] {
+      --bg-canvas: #fafbfc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f4f6f8;
+      --bg-inset: #eef2f6;
+      --border-hairline: rgba(15, 23, 42, 0.08);
+      --border-subtle: rgba(15, 23, 42, 0.14);
+      --border-accent: rgba(2, 132, 199, 0.4);
+      
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #94a3b8;
+      --text-inverse: #ffffff;
+      
+      --accent-emerald: #059669;
+      --accent-emerald-subtle: rgba(5, 150, 105, 0.08);
+      --accent-emerald-border: rgba(5, 150, 105, 0.22);
+      
+      --accent-cyan: #0891b2;
+      --accent-blue: #2563eb;
+      
+      --shadow-elevation-1: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-elevation-2: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --shadow-glow: 0 0 40px rgba(2, 132, 199, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background-color: var(--accent-blue);
+      color: #ffffff;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    /* -------------------------------------------------------------------------
+       Navigation Bar
+       ------------------------------------------------------------------------- */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: rgba(9, 10, 15, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-hairline);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    [data-theme="light"] .nav {
+      background-color: rgba(250, 251, 252, 0.88);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-brand svg {
+      width: 22px;
+      height: 22px;
+      color: var(--accent-emerald);
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .nav-menu a {
+      transition: color 0.15s ease;
+    }
+
+    .nav-menu a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-theme {
+      background: transparent;
+      border: 1px solid var(--border-hairline);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-theme:hover {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-nav-download {
+      background-color: var(--text-primary);
+      color: var(--text-inverse);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 6px;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-nav-download:hover {
+      opacity: 0.9;
+    }
+
+    /* -------------------------------------------------------------------------
+       Hero Section
+       ------------------------------------------------------------------------- */
+    .hero {
+      padding: 88px 0 68px;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge-release {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      background: var(--accent-emerald-subtle);
+      border: 1px solid var(--accent-emerald-border);
+      color: var(--accent-emerald);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      letter-spacing: 0.02em;
+      margin-bottom: 28px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+    }
+
+    .hero-title {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      max-width: 900px;
+      margin: 0 auto 24px;
+      color: var(--text-primary);
+    }
+
+    .hero-description {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 720px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* -------------------------------------------------------------------------
+       Download Cards & Cloudflare R2 Integration
+       ------------------------------------------------------------------------- */
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 820px;
+      margin: 0 auto 36px;
+      text-align: left;
+    }
+
+    @media (max-width: 768px) {
+      .download-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-title {
+        font-size: 40px;
+      }
+    }
+
+    .download-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      position: relative;
+    }
+
+    .download-card:hover {
+      border-color: var(--border-subtle);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-elevation-2);
+    }
+
+    .dl-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .dl-platform {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .dl-platform svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    .dl-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      background: var(--bg-inset);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-hairline);
+    }
+
+    .dl-filename {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .dl-action-btn {
+      background-color: var(--text-primary);
+      color: var(--text-inverse);
+      font-size: 13.5px;
+      font-weight: 650;
+      padding: 12px 18px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .dl-action-btn:hover {
+      opacity: 0.9;
+    }
+
+    .dl-action-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Cloudflare R2 Banner */
+    .r2-config-strip {
+      max-width: 820px;
+      margin: 0 auto 48px;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .r2-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .r2-input-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      max-width: 480px;
+    }
+
+    .r2-input {
+      width: 100%;
+      background: var(--bg-inset);
+      border: 1px solid var(--border-hairline);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .r2-input:focus {
+      border-color: var(--border-accent);
+    }
+
+    /* -------------------------------------------------------------------------
+       Terminal Box (Linux & macOS/WSL)
+       ------------------------------------------------------------------------- */
+    .term-wrapper {
+      max-width: 820px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .term-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-elevation-2);
+    }
+
+    .term-header {
+      background: var(--bg-inset);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .term-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .term-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    [data-theme="light"] .term-dot {
+      background: rgba(15, 23, 42, 0.18);
+    }
+
+    .term-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .btn-copy {
+      background: transparent;
+      border: 1px solid var(--border-hairline);
+      color: var(--text-secondary);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy:hover {
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-subtle);
+    }
+
+    .term-code {
+      padding: 18px 22px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .t-dim { color: var(--text-tertiary); }
+    .t-cyan { color: var(--accent-cyan); font-weight: 600; }
+    .t-emerald { color: var(--accent-emerald); font-weight: 600; }
+
+    /* -------------------------------------------------------------------------
+       Interface Showcase Section
+       ------------------------------------------------------------------------- */
+    .showcase {
+      padding: 96px 0;
+      border-top: 1px solid var(--border-hairline);
+    }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 12px;
+    }
+
+    .section-headline {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: 40px;
+      font-weight: 400;
+    }
+
+    .mockup-container {
+      border: 1px solid var(--border-hairline);
+      border-radius: 12px;
+      background: var(--bg-surface);
+      overflow: hidden;
+      box-shadow: var(--shadow-elevation-2), var(--shadow-glow);
+    }
+
+    .mockup-chrome {
+      background: var(--bg-inset);
+      height: 40px;
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+    }
+
+    .mockup-controls {
+      display: flex;
+      gap: 7px;
+    }
+
+    .mockup-title {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    .mockup-toggle {
+      display: flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 5px;
+      padding: 2px;
+    }
+
+    .mockup-tab-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .mockup-tab-btn.active {
+      background: var(--text-primary);
+      color: var(--text-inverse);
+    }
+
+    .mockup-frame {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* -------------------------------------------------------------------------
+       Engineering Capabilities (Grid)
+       ------------------------------------------------------------------------- */
+    .capabilities {
+      padding: 96px 0;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-hairline);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .feature-item {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      padding: 28px;
+      transition: border-color 0.15s ease;
+    }
+
+    .feature-item:hover {
+      border-color: var(--border-subtle);
+    }
+
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+    }
+
+    .feature-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .feature-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .feature-desc {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* -------------------------------------------------------------------------
+       CLI Command Cheatsheet
+       ------------------------------------------------------------------------- */
+    .cli-specs {
+      padding: 96px 0;
+    }
+
+    .cli-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (max-width: 860px) {
+      .cli-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cli-desc-title {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    .cli-desc-text {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .cli-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .cli-list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 13.5px;
+      color: var(--text-secondary);
+    }
+
+    .cli-list-item svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent-emerald);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* -------------------------------------------------------------------------
+       Technical Checksums & Verification Table
+       ------------------------------------------------------------------------- */
+    .specs-table-wrapper {
+      margin-top: 48px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+
+    .specs-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .specs-table th {
+      background: var(--bg-inset);
+      padding: 12px 18px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-tertiary);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .specs-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .specs-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .specs-hash {
+      color: var(--text-primary);
+      font-size: 11.5px;
+      word-break: break-all;
+    }
+
+    /* -------------------------------------------------------------------------
+       Footer
+       ------------------------------------------------------------------------- */
+    .footer {
+      padding: 64px 0 40px;
+      border-top: 1px solid var(--border-hairline);
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 24px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .footer-nav a:hover {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>FocusGuard</span>
+      </a>
+
+      <div class="nav-menu">
+        <a href="#features">Capabilities</a>
+        <a href="#preview">Interface</a>
+        <a href="#cli">CLI Spec</a>
+        <a href="#downloads">Artifacts</a>
+      </div>
+
+      <div class="nav-actions">
+        <button id="themeToggle" class="btn-theme" aria-label="Toggle Theme">
+          <span id="themeLabel">Light</span>
+        </button>
+        <a href="#downloads" class="btn-nav-download">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="container">
+      <div class="badge-release">
+        <span class="badge-dot"></span>
+        FOCUSGUARD v1.0.0 · STABLE RELEASE
+      </div>
+
+      <h1 class="hero-title">
+        Endpoint Distraction Defense &amp; Website Whitelist Firewall
+      </h1>
+
+      <p class="hero-description">
+        FocusGuard restricts installed web browsers strictly to explicitly permitted URLs and terminates non-academic processes during designated study sessions. Operates cross-platform on Ubuntu Linux and Microsoft Windows.
+      </p>
+
+      <!-- Distribution Cards -->
+      <div class="download-grid" id="downloads">
+        <!-- Linux Card -->
+        <div class="download-card">
+          <div>
+            <div class="dl-header">
+              <div class="dl-platform">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                <span>Ubuntu &amp; Debian Linux</span>
+              </div>
+              <span class="dl-tag">amd64 · .deb</span>
+            </div>
+            <div class="dl-filename" id="debFilename">focusguard_1.0.0_amd64.deb · 110 KB</div>
+          </div>
+          <a id="btnDebDownload" href="downloads/focusguard_1.0.0_amd64.deb" class="dl-action-btn" download="focusguard_1.0.0_amd64.deb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download .deb Package
+          </a>
+        </div>
+
+        <!-- Windows Card -->
+        <div class="download-card">
+          <div>
+            <div class="dl-header">
+              <div class="dl-platform">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/>
+                </svg>
+                <span>Microsoft Windows</span>
+              </div>
+              <span class="dl-tag">x64 · .exe</span>
+            </div>
+            <div class="dl-filename" id="exeFilename">FocusGuard-Setup-1.0.0.exe · 11.2 MB (Standalone)</div>
+          </div>
+          <a id="btnExeDownload" href="downloads/FocusGuard-Setup-1.0.0.exe" class="dl-action-btn" download="FocusGuard-Setup-1.0.0.exe">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Windows Installer
+          </a>
+        </div>
+      </div>
+
+      <!-- Cloudflare R2 / Custom CDN URL Switcher -->
+      <div class="r2-config-strip">
+        <div class="r2-label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span>Cloudflare R2 Bucket / CDN Domain:</span>
+        </div>
+        <div class="r2-input-box">
+          <input type="text" id="r2Input" class="r2-input" placeholder="e.g. https://pub-xxxx.r2.dev or https://downloads.yourdomain.com" spellcheck="false">
+          <button class="btn-copy" onclick="applyR2Url()">Apply</button>
+        </div>
+      </div>
+
+      <!-- Terminal Command Snippet Box -->
+      <div class="term-wrapper">
+        <div class="term-box">
+          <div class="term-header">
+            <div class="term-dots">
+              <span class="term-dot"></span>
+              <span class="term-dot"></span>
+              <span class="term-dot"></span>
+            </div>
+            <span class="term-title">bash — terminal installation (ubuntu / debian)</span>
+            <button class="btn-copy" id="copyCmdBtn" onclick="copyTerminalCmd()">
+              <span id="copyFeedback">Copy command</span>
+            </button>
+          </div>
+          <div class="term-code" id="termCode"><span class="t-dim"># 1. Download official package from distribution endpoint</span>
+<span class="t-cyan">wget</span> <span id="dynWgetUrl">https://downloads.focusguard.dev/focusguard_1.0.0_amd64.deb</span>
+
+<span class="t-dim"># 2. Install package via dpkg (resolves desktop icons, systemd daemon, and cli)</span>
+<span class="t-emerald">sudo dpkg -i</span> focusguard_1.0.0_amd64.deb
+
+<span class="t-dim"># 3. Launch application or configure via terminal</span>
+<span class="t-cyan">focusguard status</span></div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Desktop Interface Showcase -->
+  <section class="showcase" id="preview">
+    <div class="container">
+      <div class="section-eyebrow">Workstation GUI</div>
+      <h2 class="section-headline">Distraction-Free Desktop Console</h2>
+      <p class="section-sub">
+        Formal Qt/PySide6 desktop client with instantaneous light and dark theme switching, high-precision tabular timer display, and zero unnecessary visual noise.
+      </p>
+
+      <div class="mockup-container">
+        <div class="mockup-chrome">
+          <div class="mockup-controls">
+            <span class="term-dot"></span>
+            <span class="term-dot"></span>
+            <span class="term-dot"></span>
+          </div>
+          <span class="mockup-title">FocusGuard v1.0.0 · Study Shield</span>
+          <div class="mockup-toggle">
+            <button class="mockup-tab-btn active" id="btnPreviewDark" onclick="setMockupTheme('dark')">Dark</button>
+            <button class="mockup-tab-btn" id="btnPreviewLight" onclick="setMockupTheme('light')">Light</button>
+          </div>
+        </div>
+        <img id="mockupImage" class="mockup-frame" src="preview-dark.png" alt="FocusGuard Desktop Application Interface">
+      </div>
+    </div>
+  </section>
+
+  <!-- Architectural Capabilities -->
+  <section class="capabilities" id="features">
+    <div class="container">
+      <div class="section-eyebrow">System Architecture</div>
+      <h2 class="section-headline">Deterministic Endpoint Filtering</h2>
+      <p class="section-sub">
+        Built for environments where students and knowledge workers require absolute focus without accidental browser lockouts or kernel stability risks.
+      </p>
+
+      <div class="feature-grid">
+        <!-- Feature 1 -->
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+              <path d="M2 12h20"/>
+            </svg>
+          </div>
+          <h3 class="feature-name">Strict URL Whitelisting</h3>
+          <p class="feature-desc">
+            Reverses traditional blacklists. Only explicitly approved academic domains (LMS portals, academic journals, authorized documentation) resolve. All other browser destinations are intercepted.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+              <line x1="9" y1="1" x2="9" y2="4"/>
+              <line x1="15" y1="1" x2="15" y2="4"/>
+              <line x1="9" y1="20" x2="9" y2="23"/>
+              <line x1="15" y1="20" x2="15" y2="23"/>
+              <line x1="20" y1="9" x2="23" y2="9"/>
+              <line x1="20" y1="14" x2="23" y2="14"/>
+              <line x1="1" y1="9" x2="4" y2="9"/>
+              <line x1="1" y1="14" x2="4" y2="14"/>
+            </svg>
+          </div>
+          <h3 class="feature-name">Process Interception Sentinel</h3>
+          <p class="feature-desc">
+            Monitors process tables in real time via low-overhead system hooks. When games, Discord, or entertainment clients launch during an active session, they are gracefully closed before distracting the student.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h3 class="feature-name">Autonomous Session Restoration</h3>
+          <p class="feature-desc">
+            All restrictions are tied to synchronized SQLite duration rules. The moment the countdown timer expires, DNS loopback routing and process restrictions release automatically.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"/>
+              <line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+          </div>
+          <h3 class="feature-name">Full CLI Management API</h3>
+          <p class="feature-desc">
+            Manage everything headlessly. Inspect session telemetry, whitelist domains, query installed binaries, and script custom study triggers directly via terminal commands.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h3 class="feature-name">Kernel &amp; OS Safety Rails</h3>
+          <p class="feature-desc">
+            Essential system daemons (PID 1, init, systemd, sshd, explorer.exe, winlogon) are protected by invariant kernel safety guards. Accidental blocking of system components is strictly impossible.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-item">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <h3 class="feature-name">Emergency Unlock Recovery</h3>
+          <p class="feature-desc">
+            Provides a controlled emergency override in both the GUI and terminal (<code>focusguard emergency-unblock</code>) that flushes all active filters and restores baseline open connectivity.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI Command Cheatsheet & Specifications -->
+  <section class="cli-specs" id="cli">
+    <div class="container">
+      <div class="cli-split">
+        <div>
+          <div class="section-eyebrow">Terminal Utility</div>
+          <h3 class="cli-desc-title">Engineered for Scriptable Workstation Control</h3>
+          <p class="cli-desc-text">
+            Every feature accessible in the graphical interface is mirrored in the <code>focusguard</code> command-line utility for shell users, automation scripts, and server environments.
+          </p>
+          <ul class="cli-list">
+            <li class="cli-list-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Query active session timers, duration remaining, and enforcement mode</span>
+            </li>
+            <li class="cli-list-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Add approved study domains with automatic subdomain resolution</span>
+            </li>
+            <li class="cli-list-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Target distracting desktop binaries with explicit duration intervals</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="term-box">
+          <div class="term-header">
+            <div class="term-dots">
+              <span class="term-dot"></span>
+              <span class="term-dot"></span>
+              <span class="term-dot"></span>
+            </div>
+            <span class="term-title">bash — focusguard commands</span>
+          </div>
+          <div class="term-code"><span class="t-dim"># View real-time status</span>
+<span class="t-cyan">focusguard status</span>
+
+<span class="t-dim"># Add study site to whitelist</span>
+<span class="t-cyan">focusguard allow-site</span> https://canvas.instructure.com
+
+<span class="t-dim"># Block distracting domain</span>
+<span class="t-cyan">focusguard block-site</span> https://reddit.com
+
+<span class="t-dim"># Restrict game application for 2 hours</span>
+<span class="t-cyan">focusguard block-app</span> steam <span class="t-dim">--duration 2h</span>
+
+<span class="t-dim"># Initiate immediate 45m timed focus block</span>
+<span class="t-cyan">focusguard start</span> <span class="t-dim">--duration 45m</span></div>
+        </div>
+      </div>
+
+      <!-- Verification Hashes Table -->
+      <div class="specs-table-wrapper">
+        <table class="specs-table">
+          <thead>
+            <tr>
+              <th>Artifact</th>
+              <th>Target OS</th>
+              <th>Arch</th>
+              <th>SHA-256 Checksum</th>
+              <th>Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong style="color: var(--text-primary);">focusguard_1.0.0_amd64.deb</strong></td>
+              <td>Ubuntu 20.04+ / Debian 11+</td>
+              <td>x86_64</td>
+              <td class="specs-hash">dcd0cd6bdd2e1c0cdeb1b0ca6aab3cd30837032c510846c14c15a1bdade7db62</td>
+              <td>110 KB</td>
+            </tr>
+            <tr>
+              <td><strong style="color: var(--text-primary);">FocusGuard-Setup-1.0.0.exe</strong></td>
+              <td>Windows 10 / 11</td>
+              <td>x86_64</td>
+              <td class="specs-hash">41cdc95f5b47beade489a3d8aaaba53a631c6d88546a32391cfe72a7886c6c2a</td>
+              <td>11.2 MB</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <span>FocusGuard v1.0.0 · Distributed under the MIT License</span>
+      </div>
+      <div class="footer-nav">
+        <a href="#features">Architecture</a>
+        <a href="#preview">Interface</a>
+        <a href="#cli">CLI Reference</a>
+        <a href="#downloads">Downloads</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Interactive Logic -->
+  <script>
+    // Cloudflare R2 / Custom CDN URL configuration
+    function applyR2Url() {
+      const rawUrl = document.getElementById('r2Input').value.trim().replace(/\/+$/, '');
+      if (!rawUrl) return;
+
+      const debUrl = `${rawUrl}/focusguard_1.0.0_amd64.deb`;
+      const exeUrl = `${rawUrl}/FocusGuard-Setup-1.0.0.exe`;
+
+      document.getElementById('btnDebDownload').href = debUrl;
+      document.getElementById('btnExeDownload').href = exeUrl;
+      document.getElementById('dynWgetUrl').textContent = debUrl;
+      
+      const copyBtn = document.getElementById('copyFeedback');
+      copyBtn.textContent = 'Updated with R2 URL!';
+      setTimeout(() => { copyBtn.textContent = 'Copy command'; }, 2000);
+    }
+
+    // Copy terminal command with visual feedback
+    function copyTerminalCmd() {
+      const wgetUrl = document.getElementById('dynWgetUrl').textContent.trim();
+      const scriptText = `wget ${wgetUrl}\nsudo dpkg -i focusguard_1.0.0_amd64.deb\nfocusguard status`;
+
+      navigator.clipboard.writeText(scriptText).then(() => {
+        const feedback = document.getElementById('copyFeedback');
+        feedback.textContent = 'Copied to clipboard';
+        setTimeout(() => {
+          feedback.textContent = 'Copy command';
+        }, 2200);
+      });
+    }
+
+    // Mockup screenshot theme switcher
+    function setMockupTheme(mode) {
+      const img = document.getElementById('mockupImage');
+      const btnDark = document.getElementById('btnPreviewDark');
+      const btnLight = document.getElementById('btnPreviewLight');
+
+      if (mode === 'dark') {
+        img.src = 'preview-dark.png';
+        btnDark.classList.add('active');
+        btnLight.classList.remove('active');
+      } else {
+        img.src = 'preview-light.png';
+        btnLight.classList.add('active');
+        btnDark.classList.remove('active');
+      }
+    }
+
+    // Website light/dark theme toggle
+    const themeBtn = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      themeLabel.textContent = next === 'dark' ? 'Light' : 'Dark';
+      setMockupTheme(next);
+    });
+  </script>
+</body>
+</html>

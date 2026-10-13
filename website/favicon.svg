@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Shield Outline -->
+  <path d="M128,24 C192,24 224,56 224,120 C224,184 156,224 128,236 C100,224 32,184 32,120 C32,56 64,24 128,24 Z" fill="url(#shieldGrad)" stroke="#60a5fa" stroke-width="6"/>
+  <!-- Inner Shield -->
+  <path d="M128,40 C178,40 206,68 206,120 C206,172 150,206 128,218 C106,206 50,172 50,120 C50,68 78,40 128,40 Z" fill="url(#innerGrad)"/>
+  <!-- Focus Target Center Rings -->
+  <circle cx="128" cy="122" r="48" fill="none" stroke="#38bdf8" stroke-width="4" stroke-dasharray="6 6"/>
+  <circle cx="128" cy="122" r="32" fill="none" stroke="#60a5fa" stroke-width="4"/>
+  <!-- Lightning / Focus Core -->
+  <path d="M132,92 L112,124 L126,124 L122,154 L146,118 L130,118 Z" fill="#38bdf8"/>
+</svg>

@@ -19,8 +19,8 @@ class DashboardTab(QWidget):
         self.detector = AppDetector()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 20, 24, 20)
-        layout.setSpacing(18)
+        layout.setContentsMargins(24, 16, 24, 16)
+        layout.setSpacing(12)
 
         # Header Title
         title_box = QVBoxLayout()
