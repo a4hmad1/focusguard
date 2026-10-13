@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QFrame, QPushButton
+    QFrame, QPushButton, QScrollArea
 )
 from PySide6.QtCore import Qt, Signal
 from datetime import timedelta
@@ -18,8 +18,14 @@ class DashboardTab(QWidget):
         self.scheduler = scheduler
         self.detector = AppDetector()
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 16, 24, 16)
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(20, 14, 20, 14)
         layout.setSpacing(12)
 
         # Header Title
@@ -121,7 +127,19 @@ class DashboardTab(QWidget):
         g_layout.addWidget(g_text)
         layout.addWidget(guide_card)
 
+        footer_lbl = QLabel('FocusGuard Platform · Developed by <a href="https://thatahmad.com/" style="color: #3b82f6; text-decoration: none; font-weight: 600;">thatahmad</a>')
+        footer_lbl.setAlignment(Qt.AlignCenter)
+        footer_lbl.setStyleSheet("font-size: 11px; color: #64748b; margin-top: 4px;")
+        footer_lbl.setOpenExternalLinks(True)
+        layout.addWidget(footer_lbl)
+
         layout.addStretch()
+
+        scroll.setWidget(container)
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.addWidget(scroll)
+
         self.refresh_stats()
 
     def _on_start_session(self, duration: timedelta, reason: str):

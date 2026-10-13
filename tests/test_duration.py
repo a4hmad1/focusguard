@@ -17,6 +17,9 @@ def test_parse_duration_combined():
 def test_parse_plain_number_as_minutes():
     assert parse_duration("60") == timedelta(minutes=60)
     assert parse_duration("15") == timedelta(minutes=15)
+    assert parse_duration("5") == timedelta(minutes=5)
+    assert parse_duration("5m") == timedelta(minutes=5)
+    assert parse_duration("5min") == timedelta(minutes=5)
 
 def test_parse_colon_format():
     assert parse_duration("01:30") == timedelta(hours=1, minutes=30)

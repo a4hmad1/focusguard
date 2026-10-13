@@ -793,12 +793,15 @@
   <!-- Navigation -->
   <nav class="nav">
     <div class="container nav-inner">
-      <a href="#" class="nav-brand">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        <span>FocusGuard</span>
-      </a>
+      <div class="nav-brand-wrapper" style="display: flex; align-items: center; gap: 10px;">
+        <a href="#" class="nav-brand">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>FocusGuard</span>
+        </a>
+        <span class="nav-dev-tag" style="font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.2px;">by <a href="https://thatahmad.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">thatahmad</a></span>
+      </div>
 
       <div class="nav-menu">
         <a href="#features">Capabilities</a>
@@ -819,9 +822,15 @@
   <!-- Hero Section -->
   <header class="hero">
     <div class="container">
-      <div class="badge-release">
-        <span class="badge-dot"></span>
-        FOCUSGUARD v1.0.0 · STABLE RELEASE
+      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
+        <div class="badge-release" style="margin-bottom: 0;">
+          <span class="badge-dot"></span>
+          FOCUSGUARD v1.0.0 · STABLE RELEASE
+        </div>
+        <a href="https://thatahmad.com/" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 600; text-decoration: none; border: 1px solid var(--border-hairline); background: var(--bg-surface); color: var(--text-secondary); transition: border-color 0.15s ease, color 0.15s ease;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Developed by thatahmad
+        </a>
       </div>
 
       <h1 class="hero-title">
@@ -848,7 +857,7 @@
               </div>
               <span class="dl-tag">amd64 · .deb</span>
             </div>
-            <div class="dl-filename" id="debFilename">focusguard_1.0.0_amd64.deb · 113 KB</div>
+            <div class="dl-filename" id="debFilename">focusguard_1.0.0_amd64.deb · 173 KB</div>
           </div>
           <a id="btnDebDownload" href="https://github.com/a4hmad1/focusguard/releases/download/v1.0.0/focusguard_1.0.0_amd64.deb" class="dl-action-btn" download="focusguard_1.0.0_amd64.deb">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1131,14 +1140,14 @@
               <td><strong style="color: var(--text-primary);">focusguard_1.0.0_amd64.deb</strong></td>
               <td>Ubuntu 20.04+ / Debian 11+</td>
               <td>x86_64</td>
-              <td class="specs-hash">8c096c9ca0c8e88d1e5630f055407183aa3cdb0217e4bd738f9ed61b58936369</td>
-              <td>113 KB</td>
+              <td class="specs-hash">a1f12699e1c3d406370fae54526301a1750cf59833c861a332e594842116a0d9</td>
+              <td>173 KB</td>
             </tr>
             <tr>
               <td><strong style="color: var(--text-primary);">FocusGuard-Setup-1.0.0.exe</strong></td>
               <td>Windows 10 / 11</td>
               <td>x86_64</td>
-              <td class="specs-hash">befa8797428e44db1e721b9f37e58b9254e437151c32b866100793c3ef285e62</td>
+              <td class="specs-hash">deb399faaf69394d0b9ad1debee2f9bb1d17219385d7f2d1f891de4a3e0259d9</td>
               <td>78.0 MB</td>
             </tr>
           </tbody>
@@ -1152,9 +1161,10 @@
   <footer class="footer">
     <div class="container footer-inner">
       <div>
-        <span>FocusGuard v1.0.0 · Distributed under the MIT License</span>
+        <span>FocusGuard v1.0.0 · Developed by <a href="https://thatahmad.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">thatahmad</a> · Distributed under the MIT License</span>
       </div>
       <div class="footer-nav">
+        <a href="https://thatahmad.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); font-weight: 600;">Developer Website</a>
         <a href="#features">Architecture</a>
         <a href="#preview">Interface</a>
         <a href="#cli">CLI Reference</a>

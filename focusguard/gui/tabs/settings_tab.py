@@ -120,6 +120,26 @@ class SettingsTab(QWidget):
         logs_layout.addWidget(self.logs_table)
         layout.addWidget(logs_card)
 
+        # Section 5: About Platform & Developer
+        about_card, ab_layout = self._create_card("About FocusGuard & Developer")
+        ab_desc = QLabel(
+            "FocusGuard is a formal distraction-defense platform engineered for deep study and focused work sessions.<br><br>"
+            "<strong>Version:</strong> 1.0.0 Stable<br>"
+            "<strong>Developer:</strong> thatahmad (<a href='https://thatahmad.com/' style='color: #388bfd; text-decoration: none; font-weight: 600;'>thatahmad.com</a>)<br>"
+            "<strong>Platform:</strong> Cross-Platform (Ubuntu Linux &amp; Microsoft Windows)<br>"
+            "<strong>License:</strong> MIT Open Source License"
+        )
+        ab_desc.setStyleSheet("font-size: 13px; color: #64748b; line-height: 1.5;")
+        ab_desc.setOpenExternalLinks(True)
+        ab_desc.setWordWrap(True)
+        ab_layout.addWidget(ab_desc)
+
+        dev_site_btn = QPushButton("Visit Developer Website (thatahmad.com) ↗")
+        dev_site_btn.setProperty("class", "secondary")
+        dev_site_btn.clicked.connect(lambda: webbrowser.open("https://thatahmad.com/"))
+        ab_layout.addWidget(dev_site_btn, alignment=Qt.AlignLeft)
+        layout.addWidget(about_card)
+
         layout.addStretch()
         scroll.setWidget(container)
 

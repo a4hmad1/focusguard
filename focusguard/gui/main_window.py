@@ -149,11 +149,23 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.nav_list)
         layout.addStretch()
 
-        # Version Footer
-        ver_lbl = QLabel(f"v{APP_VERSION}")
-        ver_lbl.setStyleSheet("color: #6e7681; font-size: 11px;")
+        # Version & Developer Footer
+        footer_box = QVBoxLayout()
+        footer_box.setSpacing(4)
+        footer_box.setAlignment(Qt.AlignCenter)
+
+        ver_lbl = QLabel(f"FocusGuard v{APP_VERSION}")
+        ver_lbl.setStyleSheet("color: #6e7681; font-size: 11px; font-weight: 500;")
         ver_lbl.setAlignment(Qt.AlignCenter)
-        layout.addWidget(ver_lbl)
+
+        dev_lbl = QLabel('Developed by <a href="https://thatahmad.com/" style="color: #388bfd; text-decoration: none; font-weight: 600;">thatahmad</a>')
+        dev_lbl.setStyleSheet("font-size: 11px;")
+        dev_lbl.setAlignment(Qt.AlignCenter)
+        dev_lbl.setOpenExternalLinks(True)
+
+        footer_box.addWidget(ver_lbl)
+        footer_box.addWidget(dev_lbl)
+        layout.addLayout(footer_box)
 
         return sidebar
 
@@ -257,7 +269,8 @@ class MainWindow(QMainWindow):
         return header
 
     def _start_global_shield(self):
-        self.scheduler.start_focus()
+        dur = self.dashboard_tab.timer_widget.get_selected_duration()
+        self.scheduler.start_focus(duration=dur)
         self._on_tick()
 
     def _stop_global_shield(self):
