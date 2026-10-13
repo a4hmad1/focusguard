@@ -9,6 +9,7 @@ __pycache__/
 
 # Distribution / packaging build staging
 build/
+dist/
 *.egg-info/
 .installed.cfg
 *.egg
