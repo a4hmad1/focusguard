@@ -30,13 +30,23 @@ try:
 except Exception:
     pass
 
+from PySide6.QtWidgets import QApplication, QStyle
+
+def _get_style_icon(standard_pixmap) -> QIcon:
+    app = QApplication.instance()
+    if app:
+        return app.style().standardIcon(standard_pixmap)
+    return QIcon()
+
 def get_app_icon(icon_name_or_path: Optional[str], exec_name: Optional[str] = None) -> QIcon:
     """Resolve native desktop application icon with comprehensive multi-tier fallback."""
-    # 1. Absolute file path
-    if icon_name_or_path and os.path.isabs(icon_name_or_path) and os.path.exists(icon_name_or_path):
-        ic = QIcon(icon_name_or_path)
-        if not ic.isNull():
-            return ic
+    # 1. File path lookup (sanitize Windows quotes, comma indices like 'app.exe,0')
+    if icon_name_or_path:
+        clean_path = icon_name_or_path.strip('"\'').split(",")[0].strip()
+        if os.path.isabs(clean_path) and os.path.exists(clean_path):
+            ic = QIcon(clean_path)
+            if not ic.isNull():
+                return ic
 
     # 2. Freedesktop theme lookup by icon name
     if icon_name_or_path:
@@ -70,39 +80,57 @@ def get_app_icon(icon_name_or_path: Optional[str], exec_name: Optional[str] = No
     fallback = QIcon.fromTheme("application-x-executable")
     if not fallback.isNull():
         return fallback
-    return QIcon.fromTheme("system-run")
+    fallback = QIcon.fromTheme("system-run")
+    if not fallback.isNull():
+        return fallback
+    return _get_style_icon(QStyle.SP_FileIcon)
 
 def get_shield_icon() -> QIcon:
     """Return FocusGuard shield vector icon."""
     res_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icons", "focusguard.svg")
     if os.path.exists(res_dir):
         return QIcon(res_dir)
-    return QIcon.fromTheme("system-lock-screen")
+    ic = QIcon.fromTheme("system-lock-screen")
+    if not ic.isNull():
+        return ic
+    return _get_style_icon(QStyle.SP_VistaShield)
 
 def get_web_icon() -> QIcon:
     """Return web browser / globe icon."""
     ic = QIcon.fromTheme("applications-internet")
     if not ic.isNull():
         return ic
-    return QIcon.fromTheme("web-browser")
+    ic = QIcon.fromTheme("web-browser")
+    if not ic.isNull():
+        return ic
+    return _get_style_icon(QStyle.SP_DriveNetIcon)
 
 def get_apps_icon() -> QIcon:
     """Return desktop application icon."""
     ic = QIcon.fromTheme("application-x-executable")
     if not ic.isNull():
         return ic
-    return QIcon.fromTheme("system-run")
+    ic = QIcon.fromTheme("system-run")
+    if not ic.isNull():
+        return ic
+    return _get_style_icon(QStyle.SP_DesktopIcon)
 
 def get_calendar_icon() -> QIcon:
     """Return calendar / appointment icon."""
     ic = QIcon.fromTheme("appointment-new")
     if not ic.isNull():
         return ic
-    return QIcon.fromTheme("appointment-soon")
+    ic = QIcon.fromTheme("appointment-soon")
+    if not ic.isNull():
+        return ic
+    return _get_style_icon(QStyle.SP_FileDialogListView)
 
 def get_settings_icon() -> QIcon:
     """Return preferences / gear icon."""
     ic = QIcon.fromTheme("preferences-system")
     if not ic.isNull():
         return ic
-    return QIcon.fromTheme("emblem-system")
+    ic = QIcon.fromTheme("emblem-system")
+    if not ic.isNull():
+        return ic
+    return _get_style_icon(QStyle.SP_FileDialogDetailedView)

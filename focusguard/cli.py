@@ -310,6 +310,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="FocusGuard - Cross-Platform Website and Application Blocking Software",
         epilog="Run 'focusguard <command> --help' for details on each command."
     )
+    parser.add_argument("--version", "-v", action="version", version=f"{APP_NAME} v{APP_VERSION}")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # status

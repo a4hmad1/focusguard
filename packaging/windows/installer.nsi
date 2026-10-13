@@ -9,6 +9,9 @@ InstallDir "$PROGRAMFILES64\FocusGuard"
 InstallDirRegKey HKLM "Software\FocusGuard" "Install_Dir"
 RequestExecutionLevel admin
 
+Icon "focusguard.ico"
+UninstallIcon "focusguard.ico"
+
 Page directory
 Page instfiles
 
@@ -20,6 +23,7 @@ Section "FocusGuard Core"
   
   ; Native Windows Launcher Executable
   File "FocusGuard.exe"
+  File "focusguard.ico"
 
   ; Application Source
   File /r "..\..\focusguard"
@@ -38,12 +42,12 @@ Section "FocusGuard Core"
 
   ; Create Start Menu Shortcuts
   CreateDirectory "$SMPROGRAMS\FocusGuard"
-  CreateShortcut "$SMPROGRAMS\FocusGuard\FocusGuard.lnk" "$INSTDIR\FocusGuard.exe" ""
-  CreateShortcut "$SMPROGRAMS\FocusGuard\FocusGuard CLI.lnk" "$INSTDIR\focusguard.bat" ""
+  CreateShortcut "$SMPROGRAMS\FocusGuard\FocusGuard.lnk" "$INSTDIR\FocusGuard.exe" "" "$INSTDIR\FocusGuard.exe" 0
+  CreateShortcut "$SMPROGRAMS\FocusGuard\FocusGuard CLI.lnk" "$INSTDIR\focusguard.bat" "" "$INSTDIR\FocusGuard.exe" 0
   CreateShortcut "$SMPROGRAMS\FocusGuard\Uninstall.lnk" "$INSTDIR\uninstall.exe" ""
 
   ; Create Desktop Shortcut
-  CreateShortcut "$DESKTOP\FocusGuard.lnk" "$INSTDIR\FocusGuard.exe" ""
+  CreateShortcut "$DESKTOP\FocusGuard.lnk" "$INSTDIR\FocusGuard.exe" "" "$INSTDIR\FocusGuard.exe" 0
 
   ; Register in Windows Add/Remove Programs
   WriteUninstaller "$INSTDIR\uninstall.exe"
